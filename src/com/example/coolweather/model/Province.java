@@ -2,9 +2,9 @@ package com.example.coolweather.model;
 
 public class Province {
 	
-	private String name;
-	private int code;
 	private int id;
+	private String name;
+	private String code;
 	
 	public int getId() {
 		return id;
@@ -18,10 +18,15 @@ public class Province {
 	public void setName(String name) {
 		this.name = name;
 	}
-	public int getCode() {
+	public String getCode() {
 		return code;
 	}
-	public void setCode(int code) {
+	public void setCode(String code) {
 		this.code = code;
+	}
+	
+	@Override
+	public String toString() {
+		return this.id+this.name+this.code;
 	}
 }

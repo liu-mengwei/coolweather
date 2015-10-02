@@ -4,7 +4,7 @@ public class County {
 
 	private int id;
 	private String name;
-	private int code;
+	private String code;
 	private int city_id;
 	
 	public int getId() {
@@ -19,10 +19,10 @@ public class County {
 	public void setName(String name) {
 		this.name = name;
 	}
-	public int getCode() {
+	public String getCode() {
 		return code;
 	}
-	public void setCode(int code) {
+	public void setCode(String code) {
 		this.code = code;
 	}
 	public int getCity_id() {
@@ -30,6 +30,11 @@ public class County {
 	}
 	public void setCity_id(int city_id) {
 		this.city_id = city_id;
+	}
+	
+	@Override
+	public String toString() {
+		return this.id+this.name+this.code+"city_id:"+this.city_id;
 	}
 	
 }

@@ -4,7 +4,7 @@ public class City {
 
 	private int id;//数据库中的编号
 	private String name;//名称
-	private int code;//网络中返回的城市编码
+	private String code;//网络中返回的城市编码
 	private int province_id;//外键，对应于数据库中哪个省份
 	
 	public int getId() {
@@ -13,10 +13,10 @@ public class City {
 	public void setId(int id) {
 		this.id = id;
 	}
-	public int getCode() {
+	public String getCode() {
 		return code;
 	}
-	public void setCode(int code) {
+	public void setCode(String code) {
 		this.code = code;
 	}
 	public String getName() {
@@ -31,4 +31,9 @@ public class City {
 	public void setProvince_id(int province_id) {
 		this.province_id = province_id;
 	}	
+	
+	@Override
+	public String toString() {
+		return this.id+this.name+this.code+"/provinceid:"+this.province_id;
+	}
 }

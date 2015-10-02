@@ -1,17 +1,14 @@
 package com.example.coolweather.database;
 
 import java.util.ArrayList;
-import java.util.List;
-
 import com.example.coolweather.model.City;
 import com.example.coolweather.model.County;
 import com.example.coolweather.model.Province;
-
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteDatabaseCorruptException;
+
 
 public class Mydatabase{
 	
@@ -53,7 +50,7 @@ public class Mydatabase{
 		coolweather.insert("county", null, values);	
 	}
 	
-	public List<Province> getALLprovince(){
+	public ArrayList<Province> getALLprovince(){
 		Cursor cursor=coolweather.query("province", null, null, null, null, null, null);
 		ArrayList<Province> list=new ArrayList<Province>();
 		//如果移动成功证明有数据
@@ -62,7 +59,7 @@ public class Mydatabase{
 				Province province=new Province();
 				province.setId(cursor.getInt(cursor.getColumnIndex("id")));	
 				province.setName(cursor.getString(cursor.getColumnIndex("name")));
-				province.setCode(cursor.getInt(cursor.getColumnIndex("code")));			
+				province.setCode(cursor.getString(cursor.getColumnIndex("code")));			
 				list.add(province);
 			} while (cursor.moveToNext());
 		}
@@ -70,8 +67,8 @@ public class Mydatabase{
 		return list;
 	}
 	
-	public List<City> getALLcity(){
-		Cursor cursor=coolweather.query("city", null, null, null, null, null, null);
+	public ArrayList<City> getALLcity(int province_id){
+		Cursor cursor=coolweather.query("city", null, "province_id = ?", new String[]{String.valueOf(province_id)}, null, null, null);
 		ArrayList<City> list=new ArrayList<City>();
 		//如果移动成功证明有数据
 		if(cursor.moveToFirst()){
@@ -79,8 +76,8 @@ public class Mydatabase{
 				City city=new City();
 				city.setId(cursor.getInt(cursor.getColumnIndex("id")));
 				city.setName(cursor.getString(cursor.getColumnIndex("name")));
-				city.setCode(cursor.getInt(cursor.getColumnIndex("code")));					
-				city.setProvince_id(cursor.getColumnIndex("province_id"));
+				city.setCode(cursor.getString(cursor.getColumnIndex("code")));					
+				city.setProvince_id(cursor.getInt(cursor.getColumnIndex("province_id")));
 				list.add(city);
 			} while (cursor.moveToNext());
 		}
@@ -88,8 +85,8 @@ public class Mydatabase{
 		return list;
 	}
 	
-	public List<County> getALLcounty(){
-		Cursor cursor=coolweather.query("county", null, null, null, null, null, null);
+	public ArrayList<County> getALLcounty(int city_id){
+		Cursor cursor=coolweather.query("county", null, "city_id = ?", new String[]{String.valueOf(city_id)}, null, null, null);
 		ArrayList<County> list=new ArrayList<County>();
 		//如果移动成功证明有数据
 		if(cursor.moveToFirst()){
@@ -97,8 +94,8 @@ public class Mydatabase{
 				County county=new County();
 				county.setId(cursor.getInt(cursor.getColumnIndex("id")));
 				county.setName(cursor.getString(cursor.getColumnIndex("name")));
-				county.setCode(cursor.getInt(cursor.getColumnIndex("code")));					
-				county.setCity_id(cursor.getColumnIndex("city_id"));
+				county.setCode(cursor.getString(cursor.getColumnIndex("code")));					
+				county.setCity_id(cursor.getInt(cursor.getColumnIndex("city_id")));
 				list.add(county);
 			} while (cursor.moveToNext());
 		}

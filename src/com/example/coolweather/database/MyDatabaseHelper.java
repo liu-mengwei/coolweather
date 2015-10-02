@@ -10,18 +10,18 @@ public class MyDatabaseHelper extends SQLiteOpenHelper{
 	public static final String CREATE_PROVINCE="create table province("
 			+ "id integer primary key autoincrement,"
 			+ "name text,"
-			+ "code integer)";
+			+ "code text)";
 	
 	public static final String CREATE_CITY="create table city("
 			+ "id integer primary key autoincrement,"
 			+ "name text,"
-			+ "code integer,"
+			+ "code text,"
 			+ "province_id integer)";
 	
 	public static final String CREATE_COUNTY="create table county("
 			+ "id integer primary key autoincrement,"
 			+ "name text,"
-			+ "code integer,"
+			+ "code text,"
 			+ "city_id integer)";
 	
 
