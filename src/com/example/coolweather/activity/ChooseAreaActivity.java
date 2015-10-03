@@ -14,6 +14,7 @@ import com.example.coolweather.util.HttpUtil;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -26,7 +27,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class ChooseAreaActivity extends Activity{
-	
+
 	public static final String TAG="ChooseAreaActivity";
 
 	public static final int PROVINCE=0;
@@ -37,7 +38,7 @@ public class ChooseAreaActivity extends Activity{
 	ListView listview;
 	TextView title;
 	ProgressDialog progressDialog;
-	
+
 	String selected_province;
 	String selected_city;
 	int selected_province_id;
@@ -45,7 +46,6 @@ public class ChooseAreaActivity extends Activity{
 	String selected_city_code;
 	String selected_county_code;
 	int selected_city_id;
-	
 
 	ArrayList<Province> province_list;
 	ArrayList<City> city_list;
@@ -54,6 +54,9 @@ public class ChooseAreaActivity extends Activity{
 	ArrayAdapter<String> adapter;
 
 	Mydatabase coolweather_db;
+
+	boolean isFirstUsed=false;
+
 
 	@Override	
 	protected void onCreate(Bundle savedInstanceState) {
@@ -94,8 +97,46 @@ public class ChooseAreaActivity extends Activity{
 				}
 			}
 		});		
-		queryprovince();		
+		queryprovince();			
+		//检查是否是第一次使用软件，如果是则保存所有数据到数据库
+		SharedPreferences preferences=getSharedPreferences("isFirstUsed", MODE_PRIVATE);
+		isFirstUsed=preferences.getBoolean("isFirstUsed", true);
+		if(isFirstUsed){
+			if(saveAllinfo()){//成功了才返回
+				SharedPreferences.Editor editor=preferences.edit();
+				editor.putBoolean("isFirstUsed", false);
+				editor.commit();
+				isFirstUsed=false;
+			}		
+		}
 	}
+
+	//将从网上获得的所有数据存储到数据库
+	public boolean saveAllinfo(){
+		showprogress();	
+		Log.d(TAG, "显示警告框");
+		for(int i=0;i<province_list.size();i++){
+			selected_province_code=province_list.get(i).getCode();
+			if(queryfromServer("city", province_list.get(i).getId())){//id号其实是最好存入数据库时要用得，存城市时要有省份的id
+				for(int j=0;j<city_list.size();){                              //这里已经得到了citylist
+					selected_city_code=city_list.get(j).getCode();
+					if(queryfromServer("county", city_list.get(i).getId())){			
+						j++;
+					}
+					else {
+						return false;
+					}
+				}
+			}
+			else {
+				return false;
+			}
+		}
+		closeprogress();
+		return true;
+	}
+
+
 
 	public void queryprovince() {
 		province_list=coolweather_db.getALLprovince();
@@ -103,6 +144,7 @@ public class ChooseAreaActivity extends Activity{
 		//先从数据库中查找数据，如果没有从网络中查
 		if(province_list.isEmpty()==false){
 			datalist.clear();
+			Log.d(TAG, province_list.get(0).getCode());
 			for(int i=0;i<province_list.size();i++){
 				datalist.add(province_list.get(i).getName());				
 			}
@@ -118,7 +160,8 @@ public class ChooseAreaActivity extends Activity{
 	public void querycity() {
 		current_level=CITY;
 		city_list=coolweather_db.getALLcity(selected_province_id);	
-		if(city_list.isEmpty()==false){
+		if(isFirstUsed==false){
+			//如果不是第一次使用数据库中肯定有数据----下面是用来显示数据到屏幕上的
 			datalist.clear();
 			for(int i=0;i<city_list.size();i++){
 				datalist.add(city_list.get(i).getName());
@@ -127,15 +170,13 @@ public class ChooseAreaActivity extends Activity{
 			adapter.notifyDataSetChanged();
 			listview.setSelection(0);					
 		}
-		else {
-			queryfromServer("city",selected_province_id);
-		}	
 	}
 
 	public void querycounty() {
 		current_level=COUNTY;
 		county_list=coolweather_db.getALLcounty(selected_city_id);		
-		if(county_list.isEmpty()==false){
+		//如果不是第一次使用数据库中肯定有数据
+		if(isFirstUsed==false){
 			datalist.clear();
 			for(int i=0;i<county_list.size();i++){
 				datalist.add(county_list.get(i).getName());
@@ -144,16 +185,15 @@ public class ChooseAreaActivity extends Activity{
 			adapter.notifyDataSetChanged();
 			listview.setSelection(0);	
 		}
-		else {
-			queryfromServer("county",selected_city_id);
-		}	
 	}
 
 
 	//参数给httpHandleMessage用
-	public void queryfromServer(final String type,final int id){	
+	boolean isbackinfo=false;
+
+	public boolean queryfromServer(final String type,final int id){	
 		//显示进度框
-		showprogress();	
+		//showprogress();	
 		String address = null;
 		if(type.equals("province")){
 			address="http://www.weather.com.cn/data/list3/city.xml";
@@ -165,9 +205,9 @@ public class ChooseAreaActivity extends Activity{
 		else if (type.equals("county")) {
 			address="http://www.weather.com.cn/data/list3/city"+selected_city_code+".xml";
 		}
-		
+
 		HttpUtil.sendHttpRequest(address, new HttpCallbackListener() {
-			
+
 			@Override
 			public void onhandle(String response) {
 				// TODO 自动生成的方法存根
@@ -175,7 +215,7 @@ public class ChooseAreaActivity extends Activity{
 				//回到主线程
 				runOnUiThread(new Runnable() {
 					public void run() {
-						closeprogress();
+						//closeprogress();
 						if(type.equals("province")){
 							queryprovince();
 						}
@@ -187,8 +227,9 @@ public class ChooseAreaActivity extends Activity{
 						}					
 					}
 				});
+				isbackinfo=true;
 			}
-			
+
 			@Override
 			public void onerror(Exception e) {
 				// TODO 自动生成的方法存根
@@ -198,18 +239,20 @@ public class ChooseAreaActivity extends Activity{
 						closeprogress();
 						Toast.makeText(ChooseAreaActivity.this, "网络连接失败", Toast.LENGTH_SHORT).show();
 					}
-				});			
+				});	
+				isbackinfo=false;
 			}
-		});
+		});		
+		return isbackinfo;
 	}	
-	
+
 	private void showprogress() {
 		progressDialog=new ProgressDialog(this);
 		progressDialog.setCancelable(false);
 		progressDialog.setMessage("正在读取数据...");
 		progressDialog.show();		
 	}
-	
+
 	private void closeprogress(){
 		if(progressDialog!=null){
 			Log.d("ChooseAreaActivity", "成功关闭进度框");
@@ -230,7 +273,7 @@ public class ChooseAreaActivity extends Activity{
 			querycity();
 		}		
 	}	
-	
+
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
