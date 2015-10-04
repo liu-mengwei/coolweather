@@ -4,15 +4,40 @@
     android:layout_height="match_parent"
     android:orientation="vertical" >
 
-    <TextView
-        android:id="@+id/title"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:background="#2f8fd8"
-        android:gravity="center"
-        android:text="小梦天气"
-        android:textColor="#ffffff"
-        android:textSize="20dp" />
+        android:layout_height="60dp"
+        android:orientation="horizontal"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp" 
+        android:background="#00aafe"
+        >
+
+        <Button
+            android:id="@+id/back"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_gravity="center_vertical"
+            android:background="@drawable/back1" />
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="小梦天气"
+            android:textColor="#ffffff"
+            android:textSize="28dp" >
+        </TextView>
+
+        <Button
+            android:id="@+id/search"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_gravity="center_vertical"
+            android:background="@drawable/search1" />
+    </LinearLayout>
 
     <ListView
         android:id="@+id/listview"

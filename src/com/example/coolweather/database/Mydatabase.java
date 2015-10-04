@@ -12,12 +12,12 @@ import android.database.sqlite.SQLiteDatabase;
 
 public class Mydatabase{
 	
-	public static Mydatabase mydatabase;
-	public SQLiteDatabase coolweather;
+	private static Mydatabase mydatabase;
+	public SQLiteDatabase database;
 	
 	private Mydatabase(Context context) {
 		MyDatabaseHelper helper=new MyDatabaseHelper(context, "coolweather.db", null, 1);
-		coolweather=helper.getReadableDatabase();	
+		database=helper.getReadableDatabase();	
 	}
 	
 	public static Mydatabase getdatabase(Context context){
@@ -31,7 +31,7 @@ public class Mydatabase{
 		ContentValues values=new ContentValues();
 		values.put("name", province.getName());
 		values.put("code", province.getCode());
-		coolweather.insert("province", null, values);	
+		database.insert("province", null, values);	
 	}
 	
 	public void savecity(City city){
@@ -39,7 +39,7 @@ public class Mydatabase{
 		values.put("name", city.getName());
 		values.put("code", city.getCode());
 		values.put("province_id", city.getProvince_id());
-		coolweather.insert("city", null, values);
+		database.insert("city", null, values);
 	}
 	
 	public void savecounty(County county){
@@ -47,11 +47,11 @@ public class Mydatabase{
 		values.put("name", county.getName());
 		values.put("code", county.getCode());
 		values.put("city_id", county.getCity_id());
-		coolweather.insert("county", null, values);	
+		database.insert("county", null, values);	
 	}
 	
 	public ArrayList<Province> getALLprovince(){
-		Cursor cursor=coolweather.query("province", null, null, null, null, null, null);
+		Cursor cursor=database.query("province", null, null, null, null, null, null);
 		ArrayList<Province> list=new ArrayList<Province>();
 		//如果移动成功证明有数据
 		if(cursor.moveToFirst()){
@@ -68,7 +68,7 @@ public class Mydatabase{
 	}
 	
 	public ArrayList<City> getALLcity(int province_id){
-		Cursor cursor=coolweather.query("city", null, "province_id = ?", new String[]{String.valueOf(province_id)}, null, null, null);
+		Cursor cursor=database.query("city", null, "province_id = ?", new String[]{String.valueOf(province_id)}, null, null, null);
 		ArrayList<City> list=new ArrayList<City>();
 		//如果移动成功证明有数据
 		if(cursor.moveToFirst()){
@@ -86,7 +86,7 @@ public class Mydatabase{
 	}
 	
 	public ArrayList<County> getALLcounty(int city_id){
-		Cursor cursor=coolweather.query("county", null, "city_id = ?", new String[]{String.valueOf(city_id)}, null, null, null);
+		Cursor cursor=database.query("county", null, "city_id = ?", new String[]{String.valueOf(city_id)}, null, null, null);
 		ArrayList<County> list=new ArrayList<County>();
 		//如果移动成功证明有数据
 		if(cursor.moveToFirst()){
@@ -102,5 +102,15 @@ public class Mydatabase{
 		cursor.close();
 		return list;
 	}
+	
+	public void clearDatabase(){
+		database.delete("province", null, null);
+		database.delete("city", null, null);
+		database.delete("county", null, null);		
+	}
+	
+	
+	
+	
 
 }

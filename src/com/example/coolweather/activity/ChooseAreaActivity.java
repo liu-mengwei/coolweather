@@ -19,11 +19,15 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.View.OnTouchListener;
 import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -42,6 +46,8 @@ public class ChooseAreaActivity extends Activity{
 	ListView listview;
 	TextView title;
 	ProgressDialog progressDialog;
+	Button back;
+	Button search;
 
 	String selected_province;
 	String selected_city;
@@ -92,12 +98,46 @@ public class ChooseAreaActivity extends Activity{
 		setContentView(R.layout.chooselayout);
 		listview=(ListView) findViewById(R.id.listview);
 		title=(TextView) findViewById(R.id.title);
+		back=(Button) findViewById(R.id.back);
+		search=(Button) findViewById(R.id.search);
+		
+		back.setOnTouchListener(new OnTouchListener() {	
+			
+			@Override
+			public boolean onTouch(View v, MotionEvent event) {
+				if(event.getAction()==MotionEvent.ACTION_DOWN){
+					v.setBackgroundResource(R.drawable.back2);
+				}
+				else if (event.getAction()==MotionEvent.ACTION_UP) {
+					v.setBackgroundResource(R.drawable.back1);
+					back();
+				}
+				return false;		
+			}
+		});
+		
+		search.setOnTouchListener(new OnTouchListener() {
+			
+			@Override
+			public boolean onTouch(View v, MotionEvent event) {
+				if(event.getAction()==MotionEvent.ACTION_DOWN){
+					v.setBackgroundResource(R.drawable.search2);
+				}
+				else if (event.getAction()==MotionEvent.ACTION_UP) {
+					v.setBackgroundResource(R.drawable.search1);
+					//-------写查询逻辑
+					
+				}
+				return false;
+			}
+		});
+		
+		
 		adapter=new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, datalist);
 		listview.setAdapter(adapter);
 		Log.d(TAG, "当前等级为"+current_level+"oncreate");
-
 		coolweather_db=Mydatabase.getdatabase(this);
-
+		
 		listview.setOnItemClickListener(new OnItemClickListener() {
 
 			@Override
@@ -131,7 +171,10 @@ public class ChooseAreaActivity extends Activity{
 		preferences=getSharedPreferences("isFirstUsed", MODE_PRIVATE);
 		isFirstUsed=preferences.getBoolean("isFirstUsed", true);	
 
-		if(isFirstUsed){
+		if(isFirstUsed){			
+			
+			coolweather_db.clearDatabase();//数据库中可能有数据，因为可能存了一办网断了，但已经存入了数据,为了防止重复，
+			                                                //删除之前存入的数据
 			showprogress();
 			new Thread(new Runnable() {			
 				@Override
@@ -154,10 +197,9 @@ public class ChooseAreaActivity extends Activity{
 		}
 	}
 
-	
 	private int progress_value=0;//用来进行更新进度框操作
 	//将从网上获得的所有数据存储到数据库,如果中间一环出了问题就返回false
-	public boolean saveAllinfo(){	
+	public boolean saveAllinfo(){
 		if(queryfromServer("province", -1)){
 			for(int i=0;i<province_list.size();i++){
 				selected_province_code=province_list.get(i).getCode();
@@ -188,8 +230,6 @@ public class ChooseAreaActivity extends Activity{
 		}
 		return true;
 	}
-
-
 
 	public void queryprovince() {
 		province_list=coolweather_db.getALLprovince();
@@ -237,7 +277,7 @@ public class ChooseAreaActivity extends Activity{
 	}
 
 
-	//参数给httpHandleMessage用
+	//isbackinfo给httpHandleMessage用
 	boolean isbackinfo=false;
 
 	public boolean queryfromServer(final String type,final int id){	
@@ -258,7 +298,6 @@ public class ChooseAreaActivity extends Activity{
 		HttpUtil.sendHttpRequest(address, new HttpCallbackListener() {
 			@Override
 			public void onhandle(String response) {
-				// TODO 自动生成的方法存根
 				HttpHandler.httpHandleMessage(response,type,coolweather_db,id);
 				//回到主线程
 				if(type.equals("province")){
@@ -275,9 +314,7 @@ public class ChooseAreaActivity extends Activity{
 
 			@Override
 			public void onerror(Exception e) {
-				// TODO 自动生成的方法存根
 				e.printStackTrace();
-				//----------------
 				isbackinfo=false;
 			}
 		});		
@@ -286,7 +323,6 @@ public class ChooseAreaActivity extends Activity{
 
 	private void showprogress() {
 		progressDialog=new ProgressDialog(this);
-		progressDialog.setIcon(R.drawable.baozou);
 		progressDialog.setMax(34);
 		progressDialog.setCancelable(false);
 		progressDialog.setMessage("正在加载城市列表...");
@@ -304,6 +340,11 @@ public class ChooseAreaActivity extends Activity{
 	@Override
 	public void onBackPressed() {
 		Log.d(TAG, "按回退键");
+		back();
+	}	
+
+	private void back(){
+		Log.d(TAG, "按回退键");
 		if(current_level==PROVINCE){
 			finish();
 		}
@@ -313,11 +354,13 @@ public class ChooseAreaActivity extends Activity{
 		else if (current_level==COUNTY) {
 			querycity();
 		}		
-	}	
-
+	}
+	
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
 		Log.d(TAG, "ondestory");		
 	}
+	
+	
 }
