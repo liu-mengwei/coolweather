@@ -4,6 +4,7 @@ package com.example.coolweather.activity;
 import java.util.ArrayList;
 
 import com.example.coolweather.R;
+import com.example.coolweather.R.layout;
 import com.example.coolweather.database.Mydatabase;
 import com.example.coolweather.model.City;
 import com.example.coolweather.model.County;
@@ -13,12 +14,16 @@ import com.example.coolweather.util.HttpHandler;
 import com.example.coolweather.util.HttpUtil;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.text.TextUtils;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -28,6 +33,8 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -67,21 +74,22 @@ public class ChooseAreaActivity extends Activity{
 
 	boolean isFirstUsed=true;
 	SharedPreferences preferences;
-	
+
 	Handler handler=new Handler(){
 
 		public void handleMessage(android.os.Message msg) {
 			if(msg.what==SUCCESS){
 				closeprogress();
-				queryprovince();
+				queryprovince(null);
 				isFirstUsed=false;
 				SharedPreferences.Editor editor=preferences.edit();
 				editor.putBoolean("isFirstUsed", false);
 				editor.commit();
+				Toast.makeText(ChooseAreaActivity.this, "加载列表成功(^_^)", Toast.LENGTH_SHORT);
 			}			
 			else if(msg.what==FAIL){
 				closeprogress();
-				Toast.makeText(ChooseAreaActivity.this, "网络连接失败", Toast.LENGTH_SHORT).show();
+				Toast.makeText(ChooseAreaActivity.this, "网络连接失败(>﹏<)", Toast.LENGTH_SHORT).show();
 				isFirstUsed=true;
 			}
 			else if (msg.what==UPDATEPROGRESS) {
@@ -100,9 +108,9 @@ public class ChooseAreaActivity extends Activity{
 		title=(TextView) findViewById(R.id.title);
 		back=(Button) findViewById(R.id.back);
 		search=(Button) findViewById(R.id.search);
-		
+
 		back.setOnTouchListener(new OnTouchListener() {	
-			
+
 			@Override
 			public boolean onTouch(View v, MotionEvent event) {
 				if(event.getAction()==MotionEvent.ACTION_DOWN){
@@ -115,9 +123,9 @@ public class ChooseAreaActivity extends Activity{
 				return false;		
 			}
 		});
-		
+
 		search.setOnTouchListener(new OnTouchListener() {
-			
+
 			@Override
 			public boolean onTouch(View v, MotionEvent event) {
 				if(event.getAction()==MotionEvent.ACTION_DOWN){
@@ -125,19 +133,18 @@ public class ChooseAreaActivity extends Activity{
 				}
 				else if (event.getAction()==MotionEvent.ACTION_UP) {
 					v.setBackgroundResource(R.drawable.search1);
-					//-------写查询逻辑
-					
+					showSearchDialogue();	
 				}
 				return false;
 			}
 		});
-		
-		
+
+
 		adapter=new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, datalist);
 		listview.setAdapter(adapter);
 		Log.d(TAG, "当前等级为"+current_level+"oncreate");
 		coolweather_db=Mydatabase.getdatabase(this);
-		
+
 		listview.setOnItemClickListener(new OnItemClickListener() {
 
 			@Override
@@ -151,7 +158,7 @@ public class ChooseAreaActivity extends Activity{
 					selected_province=province_list.get(position).getName();
 					selected_province_code=province_list.get(position).getCode();//code用于网络请求
 					current_level=CITY;
-					querycity();					
+					querycity(null);					
 				}
 				else if (current_level==CITY) {				
 					selected_city_id=city_list.get(position).getId();	
@@ -160,7 +167,7 @@ public class ChooseAreaActivity extends Activity{
 					selected_city_code=city_list.get(position).getCode();				
 					current_level=COUNTY;
 					Log.d(TAG, selected_city_id+"");
-					querycounty();
+					querycounty(null);
 				}
 			}
 		});		
@@ -172,9 +179,9 @@ public class ChooseAreaActivity extends Activity{
 		isFirstUsed=preferences.getBoolean("isFirstUsed", true);	
 
 		if(isFirstUsed){			
-			
+
 			coolweather_db.clearDatabase();//数据库中可能有数据，因为可能存了一办网断了，但已经存入了数据,为了防止重复，
-			                                                //删除之前存入的数据
+			//删除之前存入的数据
 			showprogress();
 			new Thread(new Runnable() {			
 				@Override
@@ -193,7 +200,7 @@ public class ChooseAreaActivity extends Activity{
 			}).start();		
 		}
 		else {
-			queryprovince();
+			queryprovince(null);
 		}
 	}
 
@@ -231,49 +238,85 @@ public class ChooseAreaActivity extends Activity{
 		return true;
 	}
 
-	public void queryprovince() {
-		province_list=coolweather_db.getALLprovince();
+	/**
+	 * 从数据库中查询数据并显示数据
+	 * @param province_name 用来具体查询某一个省份名称，如果传进来null,则查询所有城市
+	 */
+	public boolean queryprovince(String province_name) {
 		current_level=PROVINCE;	
-		//先从数据库中查找数据，如果没有从网络中查
-		if(province_list.isEmpty()==false){
-			datalist.clear();
-			Log.d(TAG, province_list.get(0).getCode());
-			for(int i=0;i<province_list.size();i++){
-				datalist.add(province_list.get(i).getName());
-				Log.d(TAG, province_list.get(i).getCode());
-			}
-			title.setText("中国");
-			adapter.notifyDataSetChanged();
-			listview.setSelection(0);		
+		if(province_name==null){
+			province_list=coolweather_db.getALLprovince();
 		}
 		else {
-			queryfromServer("province",-1);//-----------可能要改变参数
+			province_list=coolweather_db.getprovince(province_name);
+		}			
+		if(province_list.isEmpty()==true){//如果为空说明没有查询到数据
+			return false;
+		}		
+		//如果不是第一次使用数据库中肯定有数据----下面是用来显示数据到屏幕上的
+		datalist.clear();
+		Log.d(TAG, province_list.get(0).getCode());
+		for(int i=0;i<province_list.size();i++){
+			datalist.add(province_list.get(i).getName());
+			Log.d(TAG, province_list.get(i).getCode());
 		}
+		title.setText("中国");
+		adapter.notifyDataSetChanged();
+		listview.setSelection(0);	
+		return true;	
 	}
 
-	public void querycity() {
+	public boolean querycity(String city_name) {
 		current_level=CITY;
-		city_list=coolweather_db.getALLcity(selected_province_id);	
+		if(city_name==null){
+			city_list=coolweather_db.getALLcity(selected_province_id);	
+		}
+		else {
+			city_list=coolweather_db.getcity(city_name);
+		}	
+		if(city_list.isEmpty()==true){
+			return false;
+		}		
 		//如果不是第一次使用数据库中肯定有数据----下面是用来显示数据到屏幕上的
 		datalist.clear();
 		for(int i=0;i<city_list.size();i++){
 			datalist.add(city_list.get(i).getName());
 		}					
-		title.setText(selected_province);
+		String province_name=coolweather_db.getprovince(city_list.get(0).getProvince_id());
+		if(province_name.equals(selected_province)){
+			title.setText(selected_province);
+		}
+		else {
+			title.setText(city_name);
+		}
 		adapter.notifyDataSetChanged();
 		listview.setSelection(0);					
+		return true;
 	}
 
-	public void querycounty() {
-		current_level=COUNTY;
-		county_list=coolweather_db.getALLcounty(selected_city_id);		
-		datalist.clear();
-		for(int i=0;i<county_list.size();i++){
-			datalist.add(county_list.get(i).getName());
+	public boolean querycounty(String county_name) {
+		current_level=COUNTY;	
+		if(county_name==null){
+			county_list=coolweather_db.getALLcounty(selected_city_id);		
 		}
-		title.setText(selected_city);
-		adapter.notifyDataSetChanged();
-		listview.setSelection(0);	
+		else {
+			county_list=coolweather_db.getcounty(county_name);
+		}	
+
+		if(county_list.isEmpty()==true){//如果为空说明没有查询到数据
+			return false;
+		}
+		else {
+			datalist.clear();
+			for(int i=0;i<county_list.size();i++){
+				datalist.add(county_list.get(i).getName());
+				Log.d(TAG, county_list.get(i).getName());
+			}
+			title.setText(selected_city);//-----------
+			adapter.notifyDataSetChanged();
+			listview.setSelection(0);	
+			return true;
+		}
 	}
 
 
@@ -336,7 +379,7 @@ public class ChooseAreaActivity extends Activity{
 			progressDialog.dismiss();
 		}
 	}
-
+	
 	@Override
 	public void onBackPressed() {
 		Log.d(TAG, "按回退键");
@@ -349,18 +392,60 @@ public class ChooseAreaActivity extends Activity{
 			finish();
 		}
 		else if (current_level==CITY) {
-			queryprovince();
+			queryprovince(null);
 		}
 		else if (current_level==COUNTY) {
-			querycity();
+			querycity(null);
 		}		
 	}
-	
+
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
 		Log.d(TAG, "ondestory");		
 	}
-	
-	
+
+
+	private void showSearchDialogue(){
+		LayoutInflater inflater=LayoutInflater.from(this);
+		//动态加载布局-------------这里有问题
+		LinearLayout dialogue_layout=(LinearLayout) inflater.inflate(R.layout.dialogue, null);
+		AlertDialog.Builder builder=new AlertDialog.Builder(this);
+		builder.setView(dialogue_layout);
+		final AlertDialog alertDialog=builder.create();
+		alertDialog.show();
+		final EditText city_text=(EditText) dialogue_layout.findViewById(R.id.cityname);
+
+		Button ok=(Button) dialogue_layout.findViewById(R.id.cityname_ok);
+		ok.setOnClickListener(new OnClickListener() {		
+			@Override
+			public void onClick(View v) { 				
+				//-----正在查询
+				alertDialog.dismiss();
+				String city_name=city_text.getText().toString();
+				if(city_name.equals("")){
+					Toast.makeText(ChooseAreaActivity.this, "输入不能为空(>﹏<)", Toast.LENGTH_SHORT).show();
+					return;
+				}
+				//三级查询
+				if(querycity(city_name)==false){
+					if(querycounty(city_name)==false){
+						if(queryprovince(city_name)==false){
+							queryprovince(null);
+							Toast.makeText(ChooseAreaActivity.this, "未找到相关城市 (>﹏<) ", Toast.LENGTH_SHORT).show();						
+						}
+					}
+				}
+			}
+		});
+		
+		Button cancle=(Button) dialogue_layout.findViewById(R.id.cityname_cancle);
+		cancle.setOnClickListener(new OnClickListener() {			
+			@Override
+			public void onClick(View v) {
+				alertDialog.dismiss();			
+			}
+		});
+		
+	}
 }
