@@ -17,6 +17,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
@@ -55,15 +56,19 @@ public class ChooseAreaActivity extends Activity{
 	ProgressDialog progressDialog;
 	Button back;
 	Button search;
-
-	String selected_province;
-	String selected_city;
-	int selected_province_id;
+	
+    int selected_province_id;
+	String selected_province_name;
 	String selected_province_code;
-	String selected_city_code;
-	String selected_county_code;
+	
 	int selected_city_id;
-
+	String selected_city_name;
+	String selected_city_code;
+	
+	int selected_county_id;
+	String selected_county_name;
+	String selected_county_code;
+	
 	ArrayList<Province> province_list;
 	ArrayList<City> city_list;
 	ArrayList<County> county_list;
@@ -85,7 +90,7 @@ public class ChooseAreaActivity extends Activity{
 				SharedPreferences.Editor editor=preferences.edit();
 				editor.putBoolean("isFirstUsed", false);
 				editor.commit();
-				Toast.makeText(ChooseAreaActivity.this, "加载列表成功(^_^)", Toast.LENGTH_SHORT);
+				Toast.makeText(ChooseAreaActivity.this, "加载列表成功(^_^)", Toast.LENGTH_SHORT).show();
 			}			
 			else if(msg.what==FAIL){
 				closeprogress();
@@ -155,7 +160,7 @@ public class ChooseAreaActivity extends Activity{
 					//先从数据库中查
 					selected_province_id=province_list.get(position).getId();
 					Log.d(TAG, "所选省份号码"+selected_province_id);
-					selected_province=province_list.get(position).getName();
+					selected_province_name=province_list.get(position).getName();
 					selected_province_code=province_list.get(position).getCode();//code用于网络请求
 					current_level=CITY;
 					querycity(null);					
@@ -163,11 +168,19 @@ public class ChooseAreaActivity extends Activity{
 				else if (current_level==CITY) {				
 					selected_city_id=city_list.get(position).getId();	
 					Log.d(TAG, "所选城市号码"+selected_city_id);					
-					selected_city=city_list.get(position).getName();
+					selected_city_name=city_list.get(position).getName();
 					selected_city_code=city_list.get(position).getCode();				
 					current_level=COUNTY;
 					Log.d(TAG, selected_city_id+"");
 					querycounty(null);
+				}
+				else if (current_level==COUNTY) {
+					selected_county_name=county_list.get(position).getName();
+					selected_county_code=county_list.get(position).getCode();
+					Intent intent=new Intent(ChooseAreaActivity.this, WeatherActivity.class);
+					intent.putExtra("county_name", selected_county_name);
+					intent.putExtra("county_code", selected_county_code);
+					startActivity(intent);
 				}
 			}
 		});		
@@ -281,10 +294,11 @@ public class ChooseAreaActivity extends Activity{
 		datalist.clear();
 		for(int i=0;i<city_list.size();i++){
 			datalist.add(city_list.get(i).getName());
-		}					
+		}	
+		//如果是模糊查询则要加入这个判断逻辑，用来更新title				
 		String province_name=coolweather_db.getprovince(city_list.get(0).getProvince_id());
-		if(province_name.equals(selected_province)){
-			title.setText(selected_province);
+		if(province_name.equals(selected_province_name)){
+			title.setText(selected_province_name);
 		}
 		else {
 			title.setText(city_name);
@@ -312,7 +326,13 @@ public class ChooseAreaActivity extends Activity{
 				datalist.add(county_list.get(i).getName());
 				Log.d(TAG, county_list.get(i).getName());
 			}
-			title.setText(selected_city);//-----------
+			String city_name=coolweather_db.getcity(county_list.get(0).getCity_id());
+			if(city_name.equals(selected_city_name)){
+				title.setText(selected_city_name);
+			}
+			else {
+				title.setText(county_name);
+			}			
 			adapter.notifyDataSetChanged();
 			listview.setSelection(0);	
 			return true;

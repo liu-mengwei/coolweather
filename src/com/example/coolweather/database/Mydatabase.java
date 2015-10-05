@@ -220,6 +220,14 @@ public class Mydatabase{
 		cursor.close();
 		return province_name;
 	}
+	
+	public String getcity(int city_id){
+		Cursor cursor=database.query("city", null, "id = ?", new String[]{city_id+""}, null, null, null);
+		cursor.moveToFirst();
+		String city_name=cursor.getString(cursor.getColumnIndex("name"));
+		cursor.close();
+		return city_name;
+	}
 
 
 }
