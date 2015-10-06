@@ -14,8 +14,8 @@
 
         <Button
             android:id="@+id/home"
-            android:layout_width="35dp"
-            android:layout_height="35dp"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
             android:layout_gravity="center_vertical" 
             android:background="@drawable/home1"
             />
@@ -32,9 +32,9 @@
         </TextView>
 
         <Button
-            android:id="@+id/update"
-            android:layout_width="35dp"
-            android:layout_height="35dp"
+            android:id="@+id/reset"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
             android:layout_gravity="center_vertical" 
             android:background="@drawable/reset1"/>
     </LinearLayout>
@@ -73,7 +73,9 @@
                 android:id="@+id/weather_image"
                 android:layout_width="300dp"
                 android:layout_height="300dp"
-                android:src="@drawable/duoyun_0" />
+                android:src="@drawable/duoyun" 
+                android:layout_marginBottom="10dp"
+                />
 
             <LinearLayout
                 android:layout_width="wrap_content"

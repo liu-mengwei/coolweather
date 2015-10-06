@@ -13,7 +13,7 @@ public class HttpHandler {
 	
 	public static final String TAG="HttpHandler";
 
-	public static void httpHandleMessage(String response,String type,Mydatabase coolweather_db,int id) {
+	public static String httpHandleMessage(String response,String type,Mydatabase coolweather_db,int id) {
 		
 		// TODO 自动生成的方法存根
 		if(type.equals("province")){
@@ -49,7 +49,12 @@ public class HttpHandler {
 				county.setCity_id(id);	
 				coolweather_db.savecounty(county);
 			}
-		}		
+		}			
+		else if (type.equals("getWeatherCode")) {
+			String weather_code=response.split("\\|")[1];
+			return weather_code;	
+		}	
+	return null;	
 	}
-
+	
 }

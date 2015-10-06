@@ -10,13 +10,14 @@ public class HttpUtil {
 
 	//listener是java的回调机制
 	public static void sendHttpRequest(final String address,final HttpCallbackListener listener){
-
-		StringBuilder builder=new StringBuilder();
+		StringBuilder builder=new StringBuilder();	
+		URL url;
+		HttpURLConnection connection = null;		
 		try {
-			URL url=new URL(address);				
-			HttpURLConnection connection=(HttpURLConnection)url.openConnection();
-			connection.setReadTimeout(15000);
-			connection.setConnectTimeout(15000);
+			url=new URL(address);	
+			connection=(HttpURLConnection)url.openConnection();
+			connection.setReadTimeout(8000);
+			connection.setConnectTimeout(8000);
 			connection.setRequestMethod("GET");
 			BufferedReader reader=new BufferedReader(new InputStreamReader(connection.getInputStream()));
 			String line="";
@@ -27,8 +28,12 @@ public class HttpUtil {
 		} catch (Exception e) {
 			// TODO: handle exception
 			listener.onerror(e);
+		}finally{
+			if(connection!=null){
+				connection.disconnect();
+			}
 		}
-
+	
 	}
 
 

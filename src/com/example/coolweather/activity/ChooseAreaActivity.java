@@ -51,11 +51,11 @@ public class ChooseAreaActivity extends Activity{
 	public static final int COUNTY=2;
 	public static int current_level;
 
-	ListView listview;
-	TextView title;
-	ProgressDialog progressDialog;
-	Button back;
-	Button search;
+	private ListView listview;
+	private TextView title;
+	private ProgressDialog progressDialog;
+	private Button back;
+	private Button search;
 	
     int selected_province_id;
 	String selected_province_name;
@@ -109,6 +109,7 @@ public class ChooseAreaActivity extends Activity{
 		super.onCreate(savedInstanceState);
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.chooselayout);
+		Log.d(TAG, "活动一创建");
 		listview=(ListView) findViewById(R.id.listview);
 		title=(TextView) findViewById(R.id.title);
 		back=(Button) findViewById(R.id.back);
@@ -179,8 +180,10 @@ public class ChooseAreaActivity extends Activity{
 					selected_county_code=county_list.get(position).getCode();
 					Intent intent=new Intent(ChooseAreaActivity.this, WeatherActivity.class);
 					intent.putExtra("county_name", selected_county_name);
-					intent.putExtra("county_code", selected_county_code);
-					startActivity(intent);
+					intent.putExtra("county_code", selected_county_code);		
+					startActivity(intent);		
+					finish();
+					
 				}
 			}
 		});		
@@ -253,7 +256,7 @@ public class ChooseAreaActivity extends Activity{
 
 	/**
 	 * 从数据库中查询数据并显示数据
-	 * @param province_name 用来具体查询某一个省份名称，如果传进来null,则查询所有城市
+	 * @param province_name 用来具体查询某一个省份，如果传进来null,则查询所有城市
 	 */
 	public boolean queryprovince(String province_name) {
 		current_level=PROVINCE;	
@@ -406,23 +409,10 @@ public class ChooseAreaActivity extends Activity{
 		back();
 	}	
 
-	private void back(){
-		Log.d(TAG, "按回退键");
-		if(current_level==PROVINCE){
-			finish();
-		}
-		else if (current_level==CITY) {
-			queryprovince(null);
-		}
-		else if (current_level==COUNTY) {
-			querycity(null);
-		}		
-	}
-
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
-		Log.d(TAG, "ondestory");		
+		Log.d(TAG, "活动一销毁");		
 	}
 
 
@@ -444,7 +434,7 @@ public class ChooseAreaActivity extends Activity{
 				alertDialog.dismiss();
 				String city_name=city_text.getText().toString();
 				if(city_name.equals("")){
-					Toast.makeText(ChooseAreaActivity.this, "输入不能为空(>﹏<)", Toast.LENGTH_SHORT).show();
+					Toast.makeText(ChooseAreaActivity.this, "输入不能为空 (>﹏<)", Toast.LENGTH_SHORT).show();
 					return;
 				}
 				//三级查询
@@ -465,7 +455,25 @@ public class ChooseAreaActivity extends Activity{
 			public void onClick(View v) {
 				alertDialog.dismiss();			
 			}
-		});
-		
+		});		
 	}
+	
+	private void back(){
+		Log.d(TAG, "按回退键");
+		if(current_level==PROVINCE){
+			Intent to=new Intent(ChooseAreaActivity.this, WeatherActivity.class);
+			Intent from=getIntent();
+			//666
+			to.putExtra("county_name", from.getStringExtra("county_name"));
+			to.putExtra("county_code", from.getStringExtra("county_code"));	
+			startActivity(to);
+		}
+		else if (current_level==CITY) {
+			queryprovince(null);
+		}
+		else if (current_level==COUNTY) {
+			querycity(null);
+		}		
+	}
+
 }
