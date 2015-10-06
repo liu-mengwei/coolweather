@@ -25,8 +25,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class WeatherActivity extends Activity{
-	
+public class WeatherActivity extends BaseActivity{
+
 	public static final String TAG="WeatherActivity";
 	public static final int SUCCESS=0;
 	public static final int FAIL=1;
@@ -47,12 +47,14 @@ public class WeatherActivity extends Activity{
 	private String county_name;
 	private String weather_code;
 
+	private Intent intent;
+
 	Handler handler=new Handler(){
-		
+		@Override
 		public void handleMessage(Message message) {
 			if(message.what==SUCCESS){
 				updateUI();				
-				Toast.makeText(WeatherActivity.this, "更新数据成功 (^_^)", Toast.LENGTH_SHORT).show();
+				Toast.makeText(WeatherActivity.this, "更新天气信息成功 (^_^)", Toast.LENGTH_SHORT).show();
 			}
 			else if (message.what==FAIL) {
 				Toast.makeText(WeatherActivity.this, "更新失败 (>﹏<)", Toast.LENGTH_SHORT).show();
@@ -60,7 +62,7 @@ public class WeatherActivity extends Activity{
 			closeprogress();
 		};	
 	};
-	
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -78,15 +80,16 @@ public class WeatherActivity extends Activity{
 		weahter_describe=(TextView) findViewById(R.id.weather_describe);
 		date=(TextView) findViewById(R.id.date);
 
-		Intent intent=getIntent();
+		intent=getIntent();
 		county_code=intent.getStringExtra("county_code");
 		county_name=intent.getStringExtra("county_name");
-		
+
+
 		weather_title.setText(county_name);
 		Log.d(TAG, "");
 		updateUI();
 		showprogress();
-		//--------按钮绑定事件
+
 		new Thread(new Runnable() {//感觉这里代码设计缺陷，应该不能从这里就分个线程出去，应该是网络请求时再分		
 			@Override
 			public void run() {
@@ -94,7 +97,7 @@ public class WeatherActivity extends Activity{
 				showWeather(weather_code);		
 			}
 		}).start();	
-			
+		//--------按钮绑定事件
 		reset.setOnTouchListener(new OnTouchListener() {
 			@Override
 			public boolean onTouch(View v, MotionEvent event) {
@@ -114,7 +117,7 @@ public class WeatherActivity extends Activity{
 				return false;
 			}
 		});
-		
+
 		home.setOnTouchListener(new OnTouchListener() {
 			@Override
 			public boolean onTouch(View v, MotionEvent event) {
@@ -134,7 +137,7 @@ public class WeatherActivity extends Activity{
 			}
 		});
 	}
-	
+
 	private void updateUI() {
 		sharedPreferences=getSharedPreferences("weather_info", MODE_PRIVATE);
 		String temp1=sharedPreferences.getString("temp1", "");
@@ -153,7 +156,7 @@ public class WeatherActivity extends Activity{
 		int imageID=Pingyin.getimageID(image_name);	
 		this.weather_image.setImageResource(imageID);
 	}
-	
+
 	private void getweather_code(String county_code) {
 		queryfromServer("getWeatherCode",county_code);
 	}
@@ -170,7 +173,6 @@ public class WeatherActivity extends Activity{
 		handler.sendMessage(message);
 	}
 
-
 	private boolean queryfromServer(final String type, final String code) {
 		String address="";
 		if(type.equals("getWeatherCode")){
@@ -179,7 +181,7 @@ public class WeatherActivity extends Activity{
 		else if (type.equals("weather")) {
 			address="http://www.weather.com.cn/data/cityinfo/"+code+".html";
 		}
-		
+
 		HttpUtil.sendHttpRequest(address, new HttpCallbackListener() {
 			@Override
 			public void onhandle(String response) {	
@@ -205,21 +207,25 @@ public class WeatherActivity extends Activity{
 	private void showprogress() {
 		progressDialog=new ProgressDialog(this);
 		progressDialog.setCancelable(false);
-		progressDialog.setMessage("正在更新数据...");
+		progressDialog.setMessage("正在更新天气信息...");
 		progressDialog.show();		
 	}
 
 	private void closeprogress(){
 		if(progressDialog!=null){
 			Log.d("ChooseAreaActivity", "成功关闭进度框");
+			try {
+				Thread.sleep(500);//加一个短暂的停留时间，避免查的太快直接瞬间关掉，我TM这都考虑到了，简直醉了
+			} catch (Exception e) {
+				e.printStackTrace();
+			}		
 			progressDialog.dismiss();
 		}
 	}
 
-
 	@Override
 	public void onBackPressed() {
-		finish();
+		ActivityController.closeProcess();
 	}
 
 	@Override

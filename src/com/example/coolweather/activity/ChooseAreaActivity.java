@@ -1,6 +1,7 @@
 package com.example.coolweather.activity;
 
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 
 import com.example.coolweather.R;
@@ -25,6 +26,7 @@ import android.os.Message;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -40,7 +42,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class ChooseAreaActivity extends Activity{
+public class ChooseAreaActivity extends BaseActivity{
 
 	public static final String TAG="ChooseAreaActivity";
 	public static final int SUCCESS=0;
@@ -56,19 +58,19 @@ public class ChooseAreaActivity extends Activity{
 	private ProgressDialog progressDialog;
 	private Button back;
 	private Button search;
-	
-    int selected_province_id;
+
+	int selected_province_id;
 	String selected_province_name;
 	String selected_province_code;
-	
+
 	int selected_city_id;
 	String selected_city_name;
 	String selected_city_code;
-	
+
 	int selected_county_id;
 	String selected_county_name;
 	String selected_county_code;
-	
+
 	ArrayList<Province> province_list;
 	ArrayList<City> city_list;
 	ArrayList<County> county_list;
@@ -183,7 +185,7 @@ public class ChooseAreaActivity extends Activity{
 					intent.putExtra("county_code", selected_county_code);		
 					startActivity(intent);		
 					finish();
-					
+
 				}
 			}
 		});		
@@ -402,7 +404,7 @@ public class ChooseAreaActivity extends Activity{
 			progressDialog.dismiss();
 		}
 	}
-	
+
 	@Override
 	public void onBackPressed() {
 		Log.d(TAG, "按回退键");
@@ -448,7 +450,7 @@ public class ChooseAreaActivity extends Activity{
 				}
 			}
 		});
-		
+
 		Button cancle=(Button) dialogue_layout.findViewById(R.id.cityname_cancle);
 		cancle.setOnClickListener(new OnClickListener() {			
 			@Override
@@ -457,7 +459,7 @@ public class ChooseAreaActivity extends Activity{
 			}
 		});		
 	}
-	
+
 	private void back(){
 		Log.d(TAG, "按回退键");
 		if(current_level==PROVINCE){
@@ -474,6 +476,14 @@ public class ChooseAreaActivity extends Activity{
 		else if (current_level==COUNTY) {
 			querycity(null);
 		}		
+	}
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {					
+		super.onCreateOptionsMenu(menu);
+		menu.add(Menu.NONE, Menu.FIRST+1, 0, "设置").setIcon(android.R.drawable.ic_menu_call);
+		menu.add(Menu.NONE, Menu.FIRST+2, 1, "退出").setIcon(android.R.drawable.ic_menu_close_clear_cancel);
+		return true;
 	}
 
 }
