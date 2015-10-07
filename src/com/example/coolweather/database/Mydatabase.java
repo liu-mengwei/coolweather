@@ -213,7 +213,13 @@ public class Mydatabase{
 		return counties;		
 	}
 	
-	public String getprovince(int province_id){
+	
+	/**
+	 * 知道数据库省份id号返回省份名称
+	 * @param province_id 省份id号
+	 * @return
+	 */
+	public String getprovinceName(int province_id){
 		Cursor cursor=database.query("province", null, "id = ?", new String[]{province_id+""}, null, null, null);
 		cursor.moveToFirst();
 		String province_name=cursor.getString(cursor.getColumnIndex("name"));		
@@ -221,13 +227,17 @@ public class Mydatabase{
 		return province_name;
 	}
 	
-	public String getcity(int city_id){
+	/**
+	 * 知道城市id号返回城市名称
+	 * @param city_id 城市id号
+	 * @return
+	 */
+	public String getcityName(int city_id){
 		Cursor cursor=database.query("city", null, "id = ?", new String[]{city_id+""}, null, null, null);
 		cursor.moveToFirst();
 		String city_name=cursor.getString(cursor.getColumnIndex("name"));
 		cursor.close();
 		return city_name;
 	}
-
-
+	
 }

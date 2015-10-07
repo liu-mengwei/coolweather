@@ -3,7 +3,6 @@ package com.example.coolweather.util;
 
 
 import android.util.Log;
-
 import com.example.coolweather.database.Mydatabase;
 import com.example.coolweather.model.City;
 import com.example.coolweather.model.County;
@@ -14,8 +13,6 @@ public class HttpHandler {
 	public static final String TAG="HttpHandler";
 
 	public static String httpHandleMessage(String response,String type,Mydatabase coolweather_db,int id) {
-		
-		// TODO 自动生成的方法存根
 		if(type.equals("province")){
 			String [] allprovinces=response.split(",");
 			Log.d("HttpHandler", response);

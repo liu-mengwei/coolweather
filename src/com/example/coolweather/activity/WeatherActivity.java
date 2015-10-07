@@ -11,6 +11,7 @@ import com.example.coolweather.util.HttpCallbackListener;
 import com.example.coolweather.util.HttpHandler;
 import com.example.coolweather.util.HttpUtil;
 import com.example.coolweather.util.JsonHandler;
+import com.example.coolweather.util.MyLocation;
 import com.example.coolweather.util.Pingyin;
 
 import android.R.integer;
@@ -22,6 +23,7 @@ import android.media.Image;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -39,8 +41,7 @@ public class WeatherActivity extends BaseActivity{
 	public static final int UPDATE_WEATHERINFO_FAIL=1;
 	public static final int UPDATE_CITYINFO_SUCCESS=2;
 	public static final int UPDATE_CITYINFO_FAIL=3;
-	public static final int UPDATEPROGRESS=4;
-	private static final String lock="666";
+	public static final int UPDATE_PROGRESS=4;
 
 	private Button home;
 	private Button reset;
@@ -74,7 +75,7 @@ public class WeatherActivity extends BaseActivity{
 	private 	String selected_city_code;
 	private Thread t1;
 	private Thread t2;
-	
+	//用来处理返回的消息
 	Handler handler=new Handler(){
 		@Override
 		public void handleMessage(Message message) {
@@ -101,9 +102,9 @@ public class WeatherActivity extends BaseActivity{
 				isFirstUsed=true;
 				closeprogress();
 				break;
-			case UPDATEPROGRESS://只有这个不关进度框也是醉了-----
+			case UPDATE_PROGRESS://只有这个不关进度框也是醉了-----
 				progressDialog.setProgress(progress_value);
-				break;		
+				break;				
 			}
 		};	
 	};
@@ -137,11 +138,9 @@ public class WeatherActivity extends BaseActivity{
 			t1.start();
 		}		
 		else {//如果不是第一次使用则正常获得countycode
-//			from=getIntent();
-//			county_code=from.getStringExtra("county_code");
-//			county_name=from.getStringExtra("county_name");
-//			weather_title.setText(county_name);
-			county_code="280601";
+			from=getIntent();
+			county_code=from.getStringExtra("county_code");
+			county_name=from.getStringExtra("county_name");
 			updateUI();
 			showprogress("update_weather");		
 		}		
@@ -194,6 +193,7 @@ public class WeatherActivity extends BaseActivity{
 		String update_time=weatherinfo_pre.getString("update_time", "");
 		String date=weatherinfo_pre.getString("date", "");
 		//用this表示是view
+		this.weather_title.setText(county_name);
 		this.temp1.setText(temp2);//因为服务器返回的temp1是高温，所以换一下
 		this.temp2.setText(temp1);
 		this.weahter_describe.setText(weather_describe);
@@ -266,7 +266,7 @@ public class WeatherActivity extends BaseActivity{
 				selected_province_id=province_list.get(i).getId();
 				Log.d(TAG, "正在读取"+province_list.get(i).getName());
 				Message message=new Message();
-				message.what=UPDATEPROGRESS;
+				message.what=UPDATE_PROGRESS;
 				progress_value++;
 				handler.sendMessage(message);
 				if(queryfromServer("city",null, province_list.get(i).getId())){//id号其实是最好存入数据库时要用得，存城市时要有省份的id
@@ -351,15 +351,22 @@ public class WeatherActivity extends BaseActivity{
 		return isbackinfo;		
 	}
 
+	/**
+	 * 用来将全部城市列表导入数据库的线程类
+	 * */
 	class update_cityinfoThread implements Runnable{
 		@Override
 		public void run() {
-			boolean result=saveAllinfo();	
+			boolean result=saveAllinfo();
 			//这里用Message返回给主线程，告诉主线程处理结果
 			Message message=new Message();	
 			if(result==true){				
-				message.what=UPDATE_CITYINFO_SUCCESS;
-				county_code="280601";//测试		
+				message.what=UPDATE_CITYINFO_SUCCESS;		
+				//定位功能写到这里，返回一个县名就行				
+				county_name=MyLocation.getLocationName(WeatherActivity.this);			
+				if(TextUtils.isEmpty(county_name)){
+					county_code=coolweather_db.getcounty(county_name).get(0).getCode();//这里直接复用代码，取第一个城市就行	
+				}				
 			}
 			else {
 				message.what=UPDATE_CITYINFO_FAIL;
@@ -367,26 +374,31 @@ public class WeatherActivity extends BaseActivity{
 			handler.sendMessage(message);
 		}
 	}
-	
+
+	/**
+	 *用来更新天气信息的线程类
+	 */
 	class update_weatherinfoThread implements Runnable{
 		@Override
 		public void run() {
 			if(county_code.equals("")){//等待countycode
 				try {
-					t1.join();//让线程一先执行
+					t1.join();//让线程一先执行结束，因为没有countycode
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
 			}
 			Log.d(TAG, "countycode值为"+county_code);
-			getweather_code(county_code);//用这个方法给变weather_code的值
+			if(TextUtils.isEmpty(county_code)==false){
+				getweather_code(county_code);//用这个方法给变weather_code的值
+			}		
 			Log.d(TAG, "weathercode值为"+weather_code);
 			showWeather(weather_code);					
 		}		
 	}
-	
-	
-	
-	
+
+
+
+
 
 }

@@ -7,7 +7,6 @@ import java.net.URL;
 
 
 public class HttpUtil {
-
 	//listener是java的回调机制
 	public static void sendHttpRequest(final String address,final HttpCallbackListener listener){
 		StringBuilder builder=new StringBuilder();	
@@ -16,8 +15,8 @@ public class HttpUtil {
 		try {
 			url=new URL(address);	
 			connection=(HttpURLConnection)url.openConnection();
-			connection.setReadTimeout(8000);
-			connection.setConnectTimeout(8000);
+			connection.setReadTimeout(12000);
+			connection.setConnectTimeout(12000);
 			connection.setRequestMethod("GET");
 			BufferedReader reader=new BufferedReader(new InputStreamReader(connection.getInputStream()));
 			String line="";
@@ -33,9 +32,7 @@ public class HttpUtil {
 				connection.disconnect();
 			}
 		}
-	
 	}
-
 
 
 }

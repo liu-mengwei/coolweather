@@ -3,7 +3,6 @@ package com.example.coolweather.activity;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-
 import com.example.coolweather.R;
 import com.example.coolweather.R.layout;
 import com.example.coolweather.database.Mydatabase;
@@ -13,7 +12,6 @@ import com.example.coolweather.model.Province;
 import com.example.coolweather.util.HttpCallbackListener;
 import com.example.coolweather.util.HttpHandler;
 import com.example.coolweather.util.HttpUtil;
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -202,7 +200,7 @@ public class ChooseAreaActivity extends BaseActivity{
 			datalist.add(city_list.get(i).getName());
 		}	
 		//如果是模糊查询则要加入这个判断逻辑，用来更新title				
-		String province_name=coolweather_db.getprovince(city_list.get(0).getProvince_id());
+		String province_name=coolweather_db.getprovinceName(city_list.get(0).getProvince_id());
 		if(province_name.equals(selected_province_name)){
 			title.setText(selected_province_name);
 		}
@@ -232,7 +230,7 @@ public class ChooseAreaActivity extends BaseActivity{
 				datalist.add(county_list.get(i).getName());
 				Log.d(TAG, county_list.get(i).getName());
 			}
-			String city_name=coolweather_db.getcity(county_list.get(0).getCity_id());
+			String city_name=coolweather_db.getcityName(county_list.get(0).getCity_id());
 			if(city_name.equals(selected_city_name)){
 				title.setText(selected_city_name);
 			}

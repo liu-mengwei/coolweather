@@ -3,12 +3,17 @@ package com.example.coolweather.util;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+
 import org.json.JSONException;
 import org.json.JSONObject;
+
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Log;
 
 public class JsonHandler {
+	
+	public static final String TAG="JsonHandler";
 
 	public static void JsonHandleMessage(String response,Context context){
 		//解析JSON格式数据并存入sharedPreferences
@@ -35,7 +40,25 @@ public class JsonHandler {
 	}
 	
 	
-	
-	
+	/**
+	 * 处理json数据
+	 * @param response
+	 * @param context
+	 * @return 所处地区的城市名
+	 */
+	public static String JsonHandlePosition(String response,Context context){
+		String cityName="";
+		try {
+			JSONObject object=new JSONObject(response);
+			JSONObject result=object.getJSONObject("result");
+			JSONObject addressComponent=result.getJSONObject("addressComponent");
+			String city=addressComponent.getString("city");
+			cityName=city.substring(0, city.length()-1);
+			Log.d(TAG, cityName);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return cityName;	
+	}
 	
 }
