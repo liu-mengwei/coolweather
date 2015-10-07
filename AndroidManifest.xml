@@ -17,7 +17,7 @@
         android:theme="@style/AppTheme"
         android:windowSoftInputMode="adjustUnspecified|stateHidden" >
         <activity
-            android:name="com.example.coolweather.activity.ChooseAreaActivity"
+            android:name="com.example.coolweather.activity.WeatherActivity"
             android:label="@string/app_name"
             android:launchMode="singleTask" >
             <intent-filter>
@@ -27,7 +27,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="com.example.coolweather.activity.WeatherActivity"
+            android:name="com.example.coolweather.activity.ChooseAreaActivity"
             android:launchMode="singleTask" >
         </activity>
     </application>

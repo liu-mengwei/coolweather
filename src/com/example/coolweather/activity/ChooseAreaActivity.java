@@ -45,8 +45,8 @@ import android.widget.Toast;
 public class ChooseAreaActivity extends BaseActivity{
 
 	public static final String TAG="ChooseAreaActivity";
-	public static final int SUCCESS=0;
-	public static final int FAIL=1;
+	public static final int UPDATE_CITYINFO_SUCCESS=0;
+	public static final int UPDATE_CITYINFO_FAIL=1;
 	public static final int UPDATEPROGRESS=2;
 	public static final int PROVINCE=0;
 	public static final int CITY=1;
@@ -79,33 +79,6 @@ public class ChooseAreaActivity extends BaseActivity{
 
 	Mydatabase coolweather_db;
 
-	boolean isFirstUsed=true;
-	SharedPreferences preferences;
-
-	Handler handler=new Handler(){
-
-		public void handleMessage(android.os.Message msg) {
-			if(msg.what==SUCCESS){
-				closeprogress();
-				queryprovince(null);
-				isFirstUsed=false;
-				SharedPreferences.Editor editor=preferences.edit();
-				editor.putBoolean("isFirstUsed", false);
-				editor.commit();
-				Toast.makeText(ChooseAreaActivity.this, "加载列表成功(^_^)", Toast.LENGTH_SHORT).show();
-			}			
-			else if(msg.what==FAIL){
-				closeprogress();
-				Toast.makeText(ChooseAreaActivity.this, "网络连接失败(>﹏<)", Toast.LENGTH_SHORT).show();
-				isFirstUsed=true;
-			}
-			else if (msg.what==UPDATEPROGRESS) {
-				progressDialog.setProgress(progress_value);
-			}
-		};
-	};
-
-
 	@Override	
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -113,12 +86,13 @@ public class ChooseAreaActivity extends BaseActivity{
 		setContentView(R.layout.chooselayout);
 		Log.d(TAG, "活动一创建");
 		listview=(ListView) findViewById(R.id.listview);
-		title=(TextView) findViewById(R.id.title);
+		title=(TextView) findViewById(R.id.title);	
+		coolweather_db=Mydatabase.getdatabase(this);
+		adapter=new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, datalist);
+		queryprovince(null);
+			
 		back=(Button) findViewById(R.id.back);
-		search=(Button) findViewById(R.id.search);
-
 		back.setOnTouchListener(new OnTouchListener() {	
-
 			@Override
 			public boolean onTouch(View v, MotionEvent event) {
 				if(event.getAction()==MotionEvent.ACTION_DOWN){
@@ -131,9 +105,9 @@ public class ChooseAreaActivity extends BaseActivity{
 				return false;		
 			}
 		});
-
+		
+		search=(Button) findViewById(R.id.search);
 		search.setOnTouchListener(new OnTouchListener() {
-
 			@Override
 			public boolean onTouch(View v, MotionEvent event) {
 				if(event.getAction()==MotionEvent.ACTION_DOWN){
@@ -146,15 +120,9 @@ public class ChooseAreaActivity extends BaseActivity{
 				return false;
 			}
 		});
-
-
-		adapter=new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, datalist);
+		
 		listview.setAdapter(adapter);
-		Log.d(TAG, "当前等级为"+current_level+"oncreate");
-		coolweather_db=Mydatabase.getdatabase(this);
-
 		listview.setOnItemClickListener(new OnItemClickListener() {
-
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view,
 					int position, long id) {
@@ -185,75 +153,9 @@ public class ChooseAreaActivity extends BaseActivity{
 					intent.putExtra("county_code", selected_county_code);		
 					startActivity(intent);		
 					finish();
-
 				}
 			}
 		});		
-
-		//这里分了个线程出去，没有执行完这句，后面就已经执行了，所以province_list为空,我草这个bug查了两个多小时	
-		//检查是否是第一次使用软件，如果是则保存所有数据到数据库
-		Log.d(TAG, "isFirstUsed"+isFirstUsed);//因为这里用到了多线程，所以这行先被执行
-		preferences=getSharedPreferences("isFirstUsed", MODE_PRIVATE);
-		isFirstUsed=preferences.getBoolean("isFirstUsed", true);	
-
-		if(isFirstUsed){			
-
-			coolweather_db.clearDatabase();//数据库中可能有数据，因为可能存了一办网断了，但已经存入了数据,为了防止重复，
-			//删除之前存入的数据
-			showprogress();
-			new Thread(new Runnable() {			
-				@Override
-				public void run() {
-					boolean result=saveAllinfo();	
-					//这里用Message返回给主线程，告诉主线程处理结果
-					Message message=new Message();	
-					if(result==true){				
-						message.what=SUCCESS;
-					}
-					else {
-						message.what=FAIL;
-					}
-					handler.sendMessage(message);
-				}
-			}).start();		
-		}
-		else {
-			queryprovince(null);
-		}
-	}
-
-	private int progress_value=0;//用来进行更新进度框操作
-	//将从网上获得的所有数据存储到数据库,如果中间一环出了问题就返回false
-	public boolean saveAllinfo(){
-		if(queryfromServer("province", -1)){
-			for(int i=0;i<province_list.size();i++){
-				selected_province_code=province_list.get(i).getCode();
-				selected_province_id=province_list.get(i).getId();
-				Message message=new Message();
-				message.what=UPDATEPROGRESS;
-				progress_value++;
-				handler.sendMessage(message);
-				if(queryfromServer("city", province_list.get(i).getId())){//id号其实是最好存入数据库时要用得，存城市时要有省份的id
-					for(int j=0;j<city_list.size();){                              //这里已经得到了citylist
-						selected_city_code=city_list.get(j).getCode();
-						selected_city_id=city_list.get(j).getId();			
-						if(queryfromServer("county", city_list.get(j).getId())){			
-							j++;
-						}
-						else {
-							return false;
-						}
-					}
-				}
-				else {
-					return false;
-				}
-			}
-		}
-		else {
-			return false;
-		}
-		return true;
 	}
 
 	/**
@@ -344,67 +246,6 @@ public class ChooseAreaActivity extends BaseActivity{
 		}
 	}
 
-
-	//isbackinfo给httpHandleMessage用
-	boolean isbackinfo=false;
-
-	public boolean queryfromServer(final String type,final int id){	
-		//显示进度框
-		//showprogress();	
-		String address = null;
-		if(type.equals("province")){
-			address="http://www.weather.com.cn/data/list3/city.xml";
-		}
-		else if (type.equals("city")) {
-			Log.d(TAG, selected_province_code+"");
-			address="http://www.weather.com.cn/data/list3/city"+selected_province_code+".xml";		
-		}
-		else if (type.equals("county")) {
-			address="http://www.weather.com.cn/data/list3/city"+selected_city_code+".xml";
-		}
-
-		HttpUtil.sendHttpRequest(address, new HttpCallbackListener() {
-			@Override
-			public void onhandle(String response) {
-				HttpHandler.httpHandleMessage(response,type,coolweather_db,id);
-				//回到主线程
-				if(type.equals("province")){
-					province_list=coolweather_db.getALLprovince();
-				}
-				else if (type.equals("city")) {
-					city_list=coolweather_db.getALLcity(selected_province_id);
-				}
-				else if (type.equals("county")) {
-					county_list=coolweather_db.getALLcounty(selected_city_id);
-				}	
-				isbackinfo=true;
-			}
-
-			@Override
-			public void onerror(Exception e) {
-				e.printStackTrace();
-				isbackinfo=false;
-			}
-		});		
-		return isbackinfo;
-	}	
-
-	private void showprogress() {
-		progressDialog=new ProgressDialog(this);
-		progressDialog.setMax(34);
-		progressDialog.setCancelable(false);
-		progressDialog.setMessage("正在加载城市列表...");
-		progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-		progressDialog.show();		
-	}
-
-	private void closeprogress(){
-		if(progressDialog!=null){
-			Log.d("ChooseAreaActivity", "成功关闭进度框");
-			progressDialog.dismiss();
-		}
-	}
-
 	@Override
 	public void onBackPressed() {
 		Log.d(TAG, "按回退键");
@@ -416,7 +257,6 @@ public class ChooseAreaActivity extends BaseActivity{
 		super.onDestroy();
 		Log.d(TAG, "活动一销毁");		
 	}
-
 
 	private void showSearchDialogue(){
 		LayoutInflater inflater=LayoutInflater.from(this);
