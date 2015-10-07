@@ -26,7 +26,7 @@ public class HttpHandler {
 				Province province=new Province();
 				province.setCode(province_value.split("\\|")[0]);
 				province.setName(province_value.split("\\|")[1]);
-				coolweather_db.saveprovince(province);			
+				coolweather_db.saveprovince(province);		
 			}
 		}
 		else if (type.equals("city")) {

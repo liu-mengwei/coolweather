@@ -55,7 +55,6 @@ public class ChooseAreaActivity extends BaseActivity{
 
 	private ListView listview;
 	private TextView title;
-	private ProgressDialog progressDialog;
 	private Button back;
 	private Button search;
 
