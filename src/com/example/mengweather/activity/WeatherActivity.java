@@ -1,19 +1,17 @@
-package com.example.coolweather.activity;
+package com.example.mengweather.activity;
 
 import java.util.ArrayList;
-
-import com.example.coolweather.R;
-import com.example.coolweather.database.Mydatabase;
-import com.example.coolweather.model.City;
-import com.example.coolweather.model.County;
-import com.example.coolweather.model.Province;
-import com.example.coolweather.util.HttpCallbackListener;
-import com.example.coolweather.util.HttpHandler;
-import com.example.coolweather.util.HttpUtil;
-import com.example.coolweather.util.JsonHandler;
-import com.example.coolweather.util.MyLocation;
-import com.example.coolweather.util.Pingyin;
-
+import com.example.mengweather.R;
+import com.example.mengweather.database.Mydatabase;
+import com.example.mengweather.model.City;
+import com.example.mengweather.model.County;
+import com.example.mengweather.model.Province;
+import com.example.mengweather.util.HttpCallbackListener;
+import com.example.mengweather.util.HttpHandler;
+import com.example.mengweather.util.HttpUtil;
+import com.example.mengweather.util.JsonHandler;
+import com.example.mengweather.util.MyLocation;
+import com.example.mengweather.util.Pingyin;
 import android.R.integer;
 import android.app.Activity;
 import android.app.ProgressDialog;

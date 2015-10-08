@@ -116,7 +116,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="5dp"
-                android:text="晴"
+                android:text="多云"
                 android:textColor="#ffffff"
                 android:textSize="40sp" />
 

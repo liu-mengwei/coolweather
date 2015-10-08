@@ -1,10 +1,10 @@
-package com.example.coolweather.database;
+package com.example.mengweather.database;
 
 import java.util.ArrayList;
 
-import com.example.coolweather.model.City;
-import com.example.coolweather.model.County;
-import com.example.coolweather.model.Province;
+import com.example.mengweather.model.City;
+import com.example.mengweather.model.County;
+import com.example.mengweather.model.Province;
 
 import android.content.ContentValues;
 import android.content.Context;

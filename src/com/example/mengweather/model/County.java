@@ -1,10 +1,11 @@
-package com.example.coolweather.model;
+package com.example.mengweather.model;
 
-public class Province {
-	
+public class County {
+
 	private int id;
 	private String name;
 	private String code;
+	private int city_id;
 	
 	public int getId() {
 		return id;
@@ -24,9 +25,16 @@ public class Province {
 	public void setCode(String code) {
 		this.code = code;
 	}
+	public int getCity_id() {
+		return city_id;
+	}
+	public void setCity_id(int city_id) {
+		this.city_id = city_id;
+	}
 	
 	@Override
 	public String toString() {
-		return this.id+this.name+this.code;
+		return this.id+this.name+this.code+"city_id:"+this.city_id;
 	}
+	
 }

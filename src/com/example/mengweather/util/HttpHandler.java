@@ -1,12 +1,13 @@
-package com.example.coolweather.util;
+package com.example.mengweather.util;
 
 
 
 import android.util.Log;
-import com.example.coolweather.database.Mydatabase;
-import com.example.coolweather.model.City;
-import com.example.coolweather.model.County;
-import com.example.coolweather.model.Province;
+
+import com.example.mengweather.database.Mydatabase;
+import com.example.mengweather.model.City;
+import com.example.mengweather.model.County;
+import com.example.mengweather.model.Province;
 
 public class HttpHandler {
 	

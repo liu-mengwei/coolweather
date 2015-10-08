@@ -1,4 +1,4 @@
-package com.example.coolweather.activity;
+package com.example.mengweather.activity;
 
 import android.app.Activity;
 

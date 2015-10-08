@@ -1,17 +1,17 @@
-package com.example.coolweather.activity;
+package com.example.mengweather.activity;
 
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import com.example.coolweather.R;
-import com.example.coolweather.R.layout;
-import com.example.coolweather.database.Mydatabase;
-import com.example.coolweather.model.City;
-import com.example.coolweather.model.County;
-import com.example.coolweather.model.Province;
-import com.example.coolweather.util.HttpCallbackListener;
-import com.example.coolweather.util.HttpHandler;
-import com.example.coolweather.util.HttpUtil;
+import com.example.mengweather.R;
+import com.example.mengweather.R.layout;
+import com.example.mengweather.database.Mydatabase;
+import com.example.mengweather.model.City;
+import com.example.mengweather.model.County;
+import com.example.mengweather.model.Province;
+import com.example.mengweather.util.HttpCallbackListener;
+import com.example.mengweather.util.HttpHandler;
+import com.example.mengweather.util.HttpUtil;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;

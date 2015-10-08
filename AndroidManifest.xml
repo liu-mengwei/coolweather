@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.coolweather"
+    package="com.example.mengweather"
     android:versionCode="1"
     android:versionName="1.0" >
 
@@ -17,12 +17,8 @@
         android:label="@string/app_name"
         android:theme="@style/AppTheme"
         android:windowSoftInputMode="adjustUnspecified|stateHidden" >
-        <meta-data
-            android:name="com.baidu.lbsapi.API_KEY"
-            android:value="TqPWfZd9ai76xXKh97o5c7be" />
-
         <activity
-            android:name="com.example.coolweather.activity.WeatherActivity"
+            android:name="com.example.mengweather.activity.WeatherActivity"
             android:label="@string/app_name"
             android:launchMode="singleTask" >
             <intent-filter>
@@ -32,7 +28,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="com.example.coolweather.activity.ChooseAreaActivity"
+            android:name="com.example.mengweather.activity.ChooseAreaActivity"
             android:launchMode="singleTask" >
         </activity>
     </application>

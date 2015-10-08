@@ -1,4 +1,4 @@
-package com.example.coolweather.util;
+package com.example.mengweather.util;
 
 import net.sourceforge.pinyin4j.PinyinHelper;
 import net.sourceforge.pinyin4j.format.HanyuPinyinCaseType;
