@@ -53,37 +53,37 @@ public class Pingyin {
 			imageID=0x7f020005;
 			break;
 		case "leizhenyu":
-			imageID=0x7f020009;
-			break;
-		case "mai":
 			imageID=0x7f02000a;
 			break;
-		case "qing":
+		case "mai":
 			imageID=0x7f02000b;
 			break;
-		case "wu":
-			imageID=0x7f020010;
+		case "qing":
+			imageID=0x7f02000c;
 			break;
-		case "xiaoxue":
+		case "wu":
 			imageID=0x7f020011;
 			break;
-		case "xiaoyu":
+		case "xiaoxue":
 			imageID=0x7f020012;
 			break;
-		case "yin":
+		case "xiaoyu":
 			imageID=0x7f020013;
 			break;
-		case "yujiaxue":
+		case "yin":
 			imageID=0x7f020014;
 			break;
-		case "zhenyu":
+		case "yujiaxue":
 			imageID=0x7f020015;
 			break;
-		case "zhongxue":
+		case "zhenyu":
 			imageID=0x7f020016;
 			break;
-		case "zhongyu":	
+		case "zhongxue":
 			imageID=0x7f020017;
+			break;
+		case "zhongyu":	
+			imageID=0x7f020018;
 			break;
 		default:
 			break;

@@ -25,7 +25,6 @@ public class JsonHandler {
 			String temp1=weatherinfo.getString("temp1");
 			String temp2=weatherinfo.getString("temp2").split("¡æ")[0];
 			String weather_describe=weatherinfo.getString("weather");
-			String update_time=weatherinfo.getString("ptime");
 			//Æ´½ÓÊý¾Ý
 			SharedPreferences sharedPreferences=context.getSharedPreferences("weather_info", Context.MODE_PRIVATE);
 			SharedPreferences.Editor editor=sharedPreferences.edit();
@@ -33,7 +32,6 @@ public class JsonHandler {
 			editor.putString("temp1", temp1);
 			editor.putString("temp2", temp2);
 			editor.putString("weather_describe", weather_describe);
-			editor.putString("update_time", update_time);	
 			editor.putString("date", sdf.format(new Date()));
 			editor.commit();
 		} catch (Exception e) {

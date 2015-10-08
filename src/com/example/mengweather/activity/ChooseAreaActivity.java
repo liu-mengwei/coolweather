@@ -301,7 +301,7 @@ public class ChooseAreaActivity extends BaseActivity{
 		Log.d(TAG, "按回退键");
 		if(current_level==PROVINCE){
 			Intent to=new Intent(ChooseAreaActivity.this, WeatherActivity.class);
-			to.putExtra("county_code", "");
+			to.putExtra("county_code",getIntent().getStringExtra("county_code"));
 			to.putExtra("tag", "Noneed");//表示让WeatherActivity不用再更新天气的标识
 			startActivity(to);
 			finish();

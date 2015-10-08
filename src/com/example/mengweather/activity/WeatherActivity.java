@@ -25,6 +25,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
@@ -46,7 +47,6 @@ public class WeatherActivity extends BaseActivity{
 	private Button home;
 	private Button reset;
 	private TextView weather_title;
-	private TextView publish_time;
 	private ImageView weather_image;
 	private TextView temp1;
 	private TextView temp2;
@@ -73,9 +73,9 @@ public class WeatherActivity extends BaseActivity{
 	private String selected_province_code;
 	private int selected_city_id;
 	private 	String selected_city_code;
-	private Thread t1;
 	private Thread t2;
 	private Thread t3;
+	private long exitTime;
 
 	//用来处理返回的消息
 	Handler handler=new Handler(){
@@ -121,7 +121,6 @@ public class WeatherActivity extends BaseActivity{
 		home=(Button) findViewById(R.id.home);
 		reset=(Button) findViewById(R.id.reset);
 		weather_title=(TextView) findViewById(R.id.weather_title);	
-		publish_time=(TextView) findViewById(R.id.publish_time);
 		weather_image=(ImageView) findViewById(R.id.weather_image);
 		temp1=(TextView) findViewById(R.id.temp1);
 		temp2=(TextView) findViewById(R.id.temp2);
@@ -131,32 +130,32 @@ public class WeatherActivity extends BaseActivity{
 		//检查是否是第一次使用软件，如果是则保存所有数据到数据库
 		isfirstused_pre=getSharedPreferences("isFirstUsed", MODE_PRIVATE);
 		isFirstUsed=isfirstused_pre.getBoolean("isFirstUsed", true);	
-		t1=new Thread(new Update_cityinfoThread());
-		t2=new Thread(new Update_weatherinfoThread());	
-		t3=new Thread(new LocationThread());
 		String tag="need";
 
 		if(isFirstUsed){//数据库中可能有数据，因为可能存了一办网断了，但已经存入了数据,为了防止重复，删除之前存入的数据
 			coolweather_db.clearDatabase();
 			showprogress("update_cityinfo");	
-			t1.start();//开启存入数据的线程
+			new Thread(new Update_weatherinfoThread()).start();//开启存入数据的线程
 		}	
 
 		else {//如果不是第一次使用则正常获得countycode
+			isFirstUsed=false;
 			from=getIntent();
 			county_code=from.getStringExtra("county_code");
 			county_name=from.getStringExtra("county_name");
 			tag=from.getStringExtra("tag");
-			
 			if(county_code==null){//自己的城市
 				SharedPreferences location_pre=getSharedPreferences("location_pre", MODE_PRIVATE);
 				String locationName=location_pre.getString("locationName", "");
 				county_name=locationName;
-				county_code=location_pre.getString("locationCode", "");		
+				//这时候肯定有countycode,
+                //不一定卧槽如果还没加载完用户点到城市列表咋办？	
+				county_code=location_pre.getString("locationCode", "");	
 				try {
-					t3.start();
-					t3.join();
-				} catch (InterruptedException e) {
+					Thread thread=new Thread(new Up_LocationThread());//这里countyname已经改变，如果发生异常就没变
+					thread.start();
+					thread.join();
+				} catch (Exception e) {
 					e.printStackTrace();
 				}
 				if(!county_name.equals(locationName)){//获得最新城市
@@ -168,11 +167,13 @@ public class WeatherActivity extends BaseActivity{
 				tag="need";
 			}
 			updateUI();
+			if(tag.equals("need")){
+				showprogress("update_weather");
+			}					
 		}	
 
-		if(tag.equals("need")){			
-			t2.start();//更新天气线程	
-			showprogress("update_weather");								
+		if(tag.equals("need")&&isFirstUsed==false){			
+			new Thread(new Update_weatherinfoThread()).start();;//更新天气线程							
 		}		
 		//--------按钮绑定事件
 		reset.setOnTouchListener(new OnTouchListener() {
@@ -183,13 +184,16 @@ public class WeatherActivity extends BaseActivity{
 				}
 				else if (event.getAction()==MotionEvent.ACTION_UP) {
 					v.setBackgroundResource(R.drawable.reset1);
-					showprogress("update_weather");
-					new Thread(new Runnable() {				
-						@Override
-						public void run() {
-							showWeather(weather_code);
-						}
-					}).start();
+					if(isFirstUsed==true){//卧槽666
+						coolweather_db.clearDatabase();
+						showprogress("update_cityinfo");
+						progress_value=0;
+						new Thread(new Update_weatherinfoThread()).start();//如果执行失败，点一下再执行一次
+					}
+					else {				
+						showprogress("update_weather");
+						new Thread(new Update_weatherinfoThread()).start();
+					}
 				}
 				return false;
 			}
@@ -219,15 +223,13 @@ public class WeatherActivity extends BaseActivity{
 		String temp1=weatherinfo_pre.getString("temp1", "");
 		String temp2=weatherinfo_pre.getString("temp2", "");
 		String weather_describe=weatherinfo_pre.getString("weather_describe", "");
-		String update_time=weatherinfo_pre.getString("update_time", "");
 		String date=weatherinfo_pre.getString("date", "");
 		String county_name=weatherinfo_pre.getString("county_name", "");
 		//用this表示是view
 		this.weather_title.setText(county_name);
-		this.temp1.setText(temp2);//因为服务器返回的temp1是高温，所以换一下
+		this.temp1.setText(temp2+"	~");//因为服务器返回的temp1是高温，所以换一下
 		this.temp2.setText(temp1);
 		this.weahter_describe.setText(weather_describe);
-		this.publish_time.setText("今天"+update_time+"发布");
 		this.date.setText(date);
 		//更新图片
 		String image_name=Pingyin.getPingYin(weather_describe).split("zhuan")[0];//转化成拼音并取转前面的天气
@@ -241,6 +243,9 @@ public class WeatherActivity extends BaseActivity{
 
 	private void showWeather(String weather_code) {
 		boolean result=queryfromServer("weather", weather_code,-1);
+		if(result==false){
+			Log.d(TAG, "看发了没");
+		}
 		Message message=new Message();	
 		if(result==true){
 			message.what=UPDATE_WEATHERINFO_SUCCESS;
@@ -267,7 +272,6 @@ public class WeatherActivity extends BaseActivity{
 
 	private void closeprogress(){
 		if(progressDialog!=null){
-			Log.d("ChooseAreaActivity", "成功关闭进度框");
 			try {
 				Thread.sleep(500);//加一个短暂的停留时间，避免查的太快直接瞬间关掉，我TM这都考虑到了，简直醉了
 			} catch (Exception e) {
@@ -277,9 +281,17 @@ public class WeatherActivity extends BaseActivity{
 		}
 	}
 
-	@Override
-	public void onBackPressed() {
-		ActivityController.closeProcess();
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+	    if(keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_DOWN){   
+	        if((System.currentTimeMillis()-exitTime) > 2000){  
+	            Toast.makeText(getApplicationContext(), "再按一次退出程序", Toast.LENGTH_SHORT).show();                                
+	            exitTime = System.currentTimeMillis();   
+	        } else {
+	        	ActivityController.closeProcess();
+	        }
+	        return true;   
+	    }
+	    return super.onKeyDown(keyCode, event);
 	}
 
 	@Override
@@ -287,6 +299,8 @@ public class WeatherActivity extends BaseActivity{
 		super.onDestroy();
 		Log.d(TAG, "活动二销毁");
 	}
+	
+	
 
 	//将从网上获得的所有数据存储到数据库,如果中间一环出了问题就返回false
 	public boolean saveAllinfo(){
@@ -416,27 +430,26 @@ public class WeatherActivity extends BaseActivity{
 	class Update_weatherinfoThread implements Runnable{
 		@Override
 		public void run() {
-			if(county_code.equals("")){//等待countycode
+			if(TextUtils.isEmpty(county_code)){//等待countycode
 				try {
-					t1.join();//让线程一先执行结束，因为没有countycode
-				} catch (InterruptedException e) {
+					Thread t1=new Thread(new Update_cityinfoThread());//让线程一先执行结束，因为没有countycode
+					t1.start();
+					t1.join();
+				} catch (Exception e) {
 					e.printStackTrace();
 				}
 			}
 			Log.d(TAG, "countycode值为"+county_code);
-			if(TextUtils.isEmpty(county_code)==false){
-				getweather_code(county_code);//用这个方法给变weather_code的值
-			}		
-			Log.d(TAG, "weathercode值为"+weather_code);
-			showWeather(weather_code);					
+			getweather_code(county_code);//上面那个线程执行完，就有county_code的值了
+			showWeather(weather_code);			
 		}		
 	}
 
-	class LocationThread implements Runnable{
+	class Up_LocationThread implements Runnable{
 		@Override
 		public void run() {
 			String newLocationName=MyLocation.getLocationName(WeatherActivity.this);
-			if(newLocationName!=""){
+			if(!TextUtils.isEmpty(newLocationName)){
 				county_name=newLocationName;
 				county_code=coolweather_db.getcounty(county_name).get(0).getCode();
 			}
