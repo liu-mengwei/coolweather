@@ -50,7 +50,6 @@ public class ChooseAreaActivity extends BaseActivity{
 	public static final int CITY=1;
 	public static final int COUNTY=2;
 	public static int current_level;
-
 	private ListView listview;
 	private TextView title;
 	private Button back;
@@ -145,10 +144,11 @@ public class ChooseAreaActivity extends BaseActivity{
 				else if (current_level==COUNTY) {
 					selected_county_name=county_list.get(position).getName();
 					selected_county_code=county_list.get(position).getCode();
-					Intent intent=new Intent(ChooseAreaActivity.this, WeatherActivity.class);
-					intent.putExtra("county_name", selected_county_name);
-					intent.putExtra("county_code", selected_county_code);		
-					startActivity(intent);		
+					Intent to=new Intent(ChooseAreaActivity.this, WeatherActivity.class);
+					to.putExtra("county_name", selected_county_name);
+					to.putExtra("county_code", selected_county_code);	
+					to.putExtra("tag", "need");
+					startActivity(to);		
 					finish();
 				}
 			}
@@ -301,11 +301,10 @@ public class ChooseAreaActivity extends BaseActivity{
 		Log.d(TAG, "按回退键");
 		if(current_level==PROVINCE){
 			Intent to=new Intent(ChooseAreaActivity.this, WeatherActivity.class);
-			Intent from=getIntent();
-			//666
-			to.putExtra("county_name", from.getStringExtra("county_name"));
-			to.putExtra("county_code", from.getStringExtra("county_code"));	
+			to.putExtra("county_code", "");
+			to.putExtra("tag", "Noneed");//表示让WeatherActivity不用再更新天气的标识
 			startActivity(to);
+			finish();
 		}
 		else if (current_level==CITY) {
 			queryprovince(null);

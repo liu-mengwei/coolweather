@@ -1,6 +1,7 @@
 package com.example.mengweather.activity;
 
 import java.util.ArrayList;
+
 import com.example.mengweather.R;
 import com.example.mengweather.database.Mydatabase;
 import com.example.mengweather.model.City;
@@ -12,6 +13,7 @@ import com.example.mengweather.util.HttpUtil;
 import com.example.mengweather.util.JsonHandler;
 import com.example.mengweather.util.MyLocation;
 import com.example.mengweather.util.Pingyin;
+
 import android.R.integer;
 import android.app.Activity;
 import android.app.ProgressDialog;
@@ -73,6 +75,8 @@ public class WeatherActivity extends BaseActivity{
 	private 	String selected_city_code;
 	private Thread t1;
 	private Thread t2;
+	private Thread t3;
+
 	//用来处理返回的消息
 	Handler handler=new Handler(){
 		@Override
@@ -80,8 +84,8 @@ public class WeatherActivity extends BaseActivity{
 			switch (message.what) {
 			case UPDATE_WEATHERINFO_SUCCESS:
 				updateUI();				
-				Toast.makeText(WeatherActivity.this, "更新天气信息成功 (^_^)", Toast.LENGTH_SHORT).show();
 				closeprogress();
+				Toast.makeText(WeatherActivity.this, "更新天气信息成功(^_^)", Toast.LENGTH_SHORT).show();
 				break;
 			case UPDATE_WEATHERINFO_FAIL:
 				Toast.makeText(WeatherActivity.this, "更新天气信息失败 (>﹏<)", Toast.LENGTH_SHORT).show();
@@ -92,7 +96,6 @@ public class WeatherActivity extends BaseActivity{
 				SharedPreferences.Editor editor=isfirstused_pre.edit();
 				editor.putBoolean("isFirstUsed", false);
 				editor.commit();
-				Toast.makeText(WeatherActivity.this, "加载列表成功(^_^)", Toast.LENGTH_SHORT).show();
 				closeprogress();
 				break;
 			case UPDATE_CITYINFO_FAIL:
@@ -128,21 +131,49 @@ public class WeatherActivity extends BaseActivity{
 		//检查是否是第一次使用软件，如果是则保存所有数据到数据库
 		isfirstused_pre=getSharedPreferences("isFirstUsed", MODE_PRIVATE);
 		isFirstUsed=isfirstused_pre.getBoolean("isFirstUsed", true);	
-		t1=new Thread(new update_cityinfoThread());
-		t2=new Thread(new update_weatherinfoThread());	
+		t1=new Thread(new Update_cityinfoThread());
+		t2=new Thread(new Update_weatherinfoThread());	
+		t3=new Thread(new LocationThread());
+		String tag="need";
+
 		if(isFirstUsed){//数据库中可能有数据，因为可能存了一办网断了，但已经存入了数据,为了防止重复，删除之前存入的数据
 			coolweather_db.clearDatabase();
 			showprogress("update_cityinfo");	
-			t1.start();
-		}		
+			t1.start();//开启存入数据的线程
+		}	
+
 		else {//如果不是第一次使用则正常获得countycode
 			from=getIntent();
 			county_code=from.getStringExtra("county_code");
 			county_name=from.getStringExtra("county_name");
+			tag=from.getStringExtra("tag");
+			
+			if(county_code==null){//自己的城市
+				SharedPreferences location_pre=getSharedPreferences("location_pre", MODE_PRIVATE);
+				String locationName=location_pre.getString("locationName", "");
+				county_name=locationName;
+				county_code=location_pre.getString("locationCode", "");		
+				try {
+					t3.start();
+					t3.join();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				if(!county_name.equals(locationName)){//获得最新城市
+					SharedPreferences.Editor editor=location_pre.edit();					
+					editor.putString("locationName", county_name);
+					editor.putString("locationCode", county_code);
+					editor.commit();
+				}
+				tag="need";
+			}
 			updateUI();
-			showprogress("update_weather");		
+		}	
+
+		if(tag.equals("need")){			
+			t2.start();//更新天气线程	
+			showprogress("update_weather");								
 		}		
-		t2.start();		
 		//--------按钮绑定事件
 		reset.setOnTouchListener(new OnTouchListener() {
 			@Override
@@ -190,6 +221,7 @@ public class WeatherActivity extends BaseActivity{
 		String weather_describe=weatherinfo_pre.getString("weather_describe", "");
 		String update_time=weatherinfo_pre.getString("update_time", "");
 		String date=weatherinfo_pre.getString("date", "");
+		String county_name=weatherinfo_pre.getString("county_name", "");
 		//用this表示是view
 		this.weather_title.setText(county_name);
 		this.temp1.setText(temp2);//因为服务器返回的temp1是高温，所以换一下
@@ -320,7 +352,6 @@ public class WeatherActivity extends BaseActivity{
 					(response, "getWeatherCode", coolweather_db, -1);//-1表示这个数据没用		
 					break;
 				case "weather":	
-					Log.d(TAG, "这response究竟是多少"+response);
 					JsonHandler.JsonHandleMessage(response,WeatherActivity.this);
 					break;
 				case "province":
@@ -352,7 +383,7 @@ public class WeatherActivity extends BaseActivity{
 	/**
 	 * 用来将全部城市列表导入数据库的线程类
 	 * */
-	class update_cityinfoThread implements Runnable{
+	class Update_cityinfoThread implements Runnable{
 		@Override
 		public void run() {
 			boolean result=saveAllinfo();
@@ -362,8 +393,14 @@ public class WeatherActivity extends BaseActivity{
 				message.what=UPDATE_CITYINFO_SUCCESS;		
 				//定位功能写到这里，返回一个县名就行				
 				county_name=MyLocation.getLocationName(WeatherActivity.this);			
-				if(TextUtils.isEmpty(county_name)){
+				if(TextUtils.isEmpty(county_name)==false){			
 					county_code=coolweather_db.getcounty(county_name).get(0).getCode();//这里直接复用代码，取第一个城市就行	
+					//在内部类中可以直接调用getSharedPreferences方法
+					SharedPreferences location_pre=getSharedPreferences("location_pre", MODE_PRIVATE);
+					SharedPreferences.Editor editor=location_pre.edit();
+					editor.putString("locationName", county_name);//将定位好的城市名存到pre中
+					editor.putString("locationCode", county_code);
+					editor.commit();
 				}				
 			}
 			else {
@@ -376,7 +413,7 @@ public class WeatherActivity extends BaseActivity{
 	/**
 	 *用来更新天气信息的线程类
 	 */
-	class update_weatherinfoThread implements Runnable{
+	class Update_weatherinfoThread implements Runnable{
 		@Override
 		public void run() {
 			if(county_code.equals("")){//等待countycode
@@ -395,8 +432,16 @@ public class WeatherActivity extends BaseActivity{
 		}		
 	}
 
-
-
+	class LocationThread implements Runnable{
+		@Override
+		public void run() {
+			String newLocationName=MyLocation.getLocationName(WeatherActivity.this);
+			if(newLocationName!=""){
+				county_name=newLocationName;
+				county_code=coolweather_db.getcounty(county_name).get(0).getCode();
+			}
+		}		
+	}
 
 
 }

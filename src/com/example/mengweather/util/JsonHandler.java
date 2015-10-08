@@ -21,6 +21,7 @@ public class JsonHandler {
 		try {			
 			JSONObject object=new JSONObject(response);
 			JSONObject weatherinfo=object.getJSONObject("weatherinfo");
+			String county_name=weatherinfo.getString("city");//这个其实是县名
 			String temp1=weatherinfo.getString("temp1");
 			String temp2=weatherinfo.getString("temp2").split("℃")[0];
 			String weather_describe=weatherinfo.getString("weather");
@@ -28,6 +29,7 @@ public class JsonHandler {
 			//拼接数据
 			SharedPreferences sharedPreferences=context.getSharedPreferences("weather_info", Context.MODE_PRIVATE);
 			SharedPreferences.Editor editor=sharedPreferences.edit();
+			editor.putString("county_name", county_name);
 			editor.putString("temp1", temp1);
 			editor.putString("temp2", temp2);
 			editor.putString("weather_describe", weather_describe);
@@ -49,7 +51,8 @@ public class JsonHandler {
 	public static String JsonHandlePosition(String response,Context context){
 		String cityName="";
 		try {
-			JSONObject object=new JSONObject(response);
+			String jsondata=response.substring(29);
+			JSONObject object=new JSONObject(jsondata);
 			JSONObject result=object.getJSONObject("result");
 			JSONObject addressComponent=result.getJSONObject("addressComponent");
 			String city=addressComponent.getString("city");

@@ -29,8 +29,8 @@ public class MyLocation {
 		Location location=getlocation(context);
 		Log.d(TAG, "经度"+location.getLatitude());
 		//拼接反向地理编码的地址
-		String address="http://api.map.baidu.com/geocoder/v2/?ak=TqPWfZd9ai76xXKh97o5c7be"
-				+"&mcode=F4:1C:FB:EF:10:2C:B2:50:83:27:9B:9C:87:8D:E5:7D:01:AD:C4:DE"
+		String address="http://api.map.baidu.com/geocoder/v2/?ak=TBLDlcNrPgqBwGnPGBUkDZgR"
+				+"&mcode=60:7D:2E:3A:A7:92:57:4A:D3:E9:9C:72:24:4D:24:06:2B:B7:6C:8A;com.example.mengweather"
 				+"&callback=renderReverse&location="+location.getLatitude()+","
 				+location.getLongitude()+"&output=json&pois=1";
 		
