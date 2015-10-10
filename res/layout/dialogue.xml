@@ -33,7 +33,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:ems="10" 
-            android:hint="请输入城市名或县名">
+            android:hint="请输入城市名">
             <requestFocus />
         </EditText>
     </LinearLayout>

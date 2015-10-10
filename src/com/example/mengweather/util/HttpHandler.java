@@ -32,7 +32,7 @@ public class HttpHandler {
 			Log.d("HttpHandler", allcitys[0].split("\\|")[0].substring(0, 2));
 			for (String city_value : allcitys) {
 				City city=new City();
-				city.setCode(city_value.split("\\|")[0]);				
+				city.setCode(city_value.split("\\|")[0]+"01");				
 				city.setName(city_value.split("\\|")[1]);
 				city.setProvince_id(id);			
 				coolweather_db.savecity(city);	

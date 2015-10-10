@@ -1,11 +1,9 @@
 package com.example.mengweather.activity;
 
 import java.util.ArrayList;
-
 import com.example.mengweather.R;
 import com.example.mengweather.database.Mydatabase;
 import com.example.mengweather.model.City;
-import com.example.mengweather.model.County;
 import com.example.mengweather.model.Province;
 import com.example.mengweather.util.HttpCallbackListener;
 import com.example.mengweather.util.HttpHandler;
@@ -13,13 +11,9 @@ import com.example.mengweather.util.HttpUtil;
 import com.example.mengweather.util.JsonHandler;
 import com.example.mengweather.util.MyLocation;
 import com.example.mengweather.util.Pingyin;
-
-import android.R.integer;
-import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.media.Image;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -68,17 +62,12 @@ public class WeatherActivity extends BaseActivity{
 	private Mydatabase coolweather_db;
 	private ArrayList<Province> province_list;
 	private ArrayList<City> city_list;
-	private ArrayList<County> county_list;
 	private 	int selected_province_id;
 	private String selected_province_code;
-	private int selected_city_id;
-	private 	String selected_city_code;
-	private Thread t2;
-	private Thread t3;
 	private long exitTime;
 
 	//用来处理返回的消息
-	Handler handler=new Handler(){
+	private Handler handler=new Handler(){
 		@Override
 		public void handleMessage(Message message) {
 			switch (message.what) {
@@ -265,7 +254,7 @@ public class WeatherActivity extends BaseActivity{
 		else {
 			progressDialog.setMax(34);
 			progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-			progressDialog.setMessage("正在加载城市列表...");
+			progressDialog.setMessage("正在加载城市列表.....(>﹏<)\n若失败请切换至WIFI环境点击右上角刷新按钮");
 		}
 		progressDialog.show();
 	}
@@ -302,9 +291,12 @@ public class WeatherActivity extends BaseActivity{
 	
 	
 
-	//将从网上获得的所有数据存储到数据库,如果中间一环出了问题就返回false
+	//将从网上获得的所有数据存储到数据库,如果中间一环出了问题就返回false,先只加载省市数据
 	public boolean saveAllinfo(){
-		if(queryfromServer("province", null,-1)){
+		if(queryfromServer("province", null,-1)==false){
+			return false;
+		}
+		else {
 			for(int i=0;i<province_list.size();i++){
 				selected_province_code=province_list.get(i).getCode();
 				selected_province_id=province_list.get(i).getId();
@@ -313,27 +305,13 @@ public class WeatherActivity extends BaseActivity{
 				message.what=UPDATE_PROGRESS;
 				progress_value++;
 				handler.sendMessage(message);
-				if(queryfromServer("city",null, province_list.get(i).getId())){//id号其实是最好存入数据库时要用得，存城市时要有省份的id
-					for(int j=0;j<city_list.size();){    
-						selected_city_code=city_list.get(j).getCode();
-						selected_city_id=city_list.get(j).getId();			
-						if(queryfromServer("county",null,city_list.get(j).getId())){			
-							j++;
-						}
-						else {
-							return false;
-						}
-					}
-				}
-				else {
+				//id号其实是最好存入数据库时要用得，存城市时要有省份的id
+				if(queryfromServer("city",null, province_list.get(i).getId())==false){
 					return false;
-				}
+				}				
 			}
-		}
-		else {
-			return false;
-		}
-		return true;
+			return true;
+		}	
 	}
 
 	private boolean queryfromServer(final String type, final String code,final int id) {
@@ -351,9 +329,6 @@ public class WeatherActivity extends BaseActivity{
 		case "city"://获取市级列表
 			address="http://www.weather.com.cn/data/list3/city"+selected_province_code+".xml";		
 			break;
-		case "county"://获取县级列表
-			address="http://www.weather.com.cn/data/list3/city"+selected_city_code+".xml";
-			break;	
 		default:
 			break;
 		}
@@ -375,11 +350,7 @@ public class WeatherActivity extends BaseActivity{
 				case "city":	
 					HttpHandler.httpHandleMessage(response, "city", coolweather_db, selected_province_id);
 					city_list=coolweather_db.getALLcity(selected_province_id);
-					break;
-				case "county":	
-					HttpHandler.httpHandleMessage(response, "county", coolweather_db, selected_city_id);
-					county_list=coolweather_db.getALLcounty(selected_city_id);
-					break;				
+					break;			
 				default:
 					break;
 				}					
@@ -408,7 +379,7 @@ public class WeatherActivity extends BaseActivity{
 				//定位功能写到这里，返回一个县名就行				
 				county_name=MyLocation.getLocationName(WeatherActivity.this);			
 				if(TextUtils.isEmpty(county_name)==false){			
-					county_code=coolweather_db.getcounty(county_name).get(0).getCode();//这里直接复用代码，取第一个城市就行	
+					county_code=coolweather_db.getcity(county_name).get(0).getCode();//这里直接复用代码，取第一个城市就行	
 					//在内部类中可以直接调用getSharedPreferences方法
 					SharedPreferences location_pre=getSharedPreferences("location_pre", MODE_PRIVATE);
 					SharedPreferences.Editor editor=location_pre.edit();
@@ -451,7 +422,7 @@ public class WeatherActivity extends BaseActivity{
 			String newLocationName=MyLocation.getLocationName(WeatherActivity.this);
 			if(!TextUtils.isEmpty(newLocationName)){
 				county_name=newLocationName;
-				county_code=coolweather_db.getcounty(county_name).get(0).getCode();
+				county_code=coolweather_db.getcity(county_name).get(0).getCode();
 			}
 		}		
 	}

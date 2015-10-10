@@ -1,13 +1,11 @@
 package com.example.mengweather.util;
 
 import java.util.List;
-
 import android.content.Context;
 import android.location.Location;
 import android.location.LocationManager;
-import android.os.Looper;
 import android.util.Log;
-import android.widget.Toast;
+
 
 /**
  * 用来实现地图定位功能的类
@@ -29,8 +27,8 @@ public class MyLocation {
 		Location location=getlocation(context);
 		Log.d(TAG, "经度"+location.getLatitude());
 		//拼接反向地理编码的地址
-		String address="http://api.map.baidu.com/geocoder/v2/?ak=TBLDlcNrPgqBwGnPGBUkDZgR"
-				+"&mcode=60:7D:2E:3A:A7:92:57:4A:D3:E9:9C:72:24:4D:24:06:2B:B7:6C:8A;com.example.mengweather"
+		String address="http://api.map.baidu.com/geocoder/v2/?ak=rfRk6cyi48zoePeEPOX0uT9m"
+				+"&mcode=B8:F7:0F:28:97:D0:2A:F8:33:51:AE:46:ED:56:62:FD:C4:B3:4A:36;com.example.mengweather"
 				+"&callback=renderReverse&location="+location.getLatitude()+","
 				+location.getLongitude()+"&output=json&pois=1";
 		

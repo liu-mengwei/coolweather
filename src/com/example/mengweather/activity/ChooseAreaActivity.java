@@ -1,10 +1,9 @@
 package com.example.mengweather.activity;
 
 
-import java.lang.reflect.Method;
+
 import java.util.ArrayList;
 import com.example.mengweather.R;
-import com.example.mengweather.R.layout;
 import com.example.mengweather.database.Mydatabase;
 import com.example.mengweather.model.City;
 import com.example.mengweather.model.County;
@@ -12,19 +11,13 @@ import com.example.mengweather.model.Province;
 import com.example.mengweather.util.HttpCallbackListener;
 import com.example.mengweather.util.HttpHandler;
 import com.example.mengweather.util.HttpUtil;
-import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.Dialog;
-import android.app.ProgressDialog;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -43,12 +36,13 @@ import android.widget.Toast;
 public class ChooseAreaActivity extends BaseActivity{
 
 	public static final String TAG="ChooseAreaActivity";
-	public static final int UPDATE_CITYINFO_SUCCESS=0;
-	public static final int UPDATE_CITYINFO_FAIL=1;
-	public static final int UPDATEPROGRESS=2;
+	public static final int UPDATE_COUNTYINFO_SUCCESS=0;
+	public static final int UPDATE_COUNTYINFO_FAIL=1;
 	public static final int PROVINCE=0;
 	public static final int CITY=1;
 	public static final int COUNTY=2;
+	
+	private boolean isbackinfo=false;
 	public static int current_level;
 	private ListView listview;
 	private TextView title;
@@ -72,9 +66,23 @@ public class ChooseAreaActivity extends BaseActivity{
 	ArrayList<County> county_list;
 	ArrayList<String> datalist=new ArrayList<String>();
 	ArrayAdapter<String> adapter;
-
 	Mydatabase coolweather_db;
-
+	
+	private Handler handler=new Handler(){
+		@Override
+		public void handleMessage(Message message) {
+			switch (message.what) {
+			case UPDATE_COUNTYINFO_FAIL:
+				Toast.makeText(ChooseAreaActivity.this, "更新区县列表失败(>﹏<)", Toast.LENGTH_SHORT).show();
+				break;
+			case UPDATE_COUNTYINFO_SUCCESS:
+				querycounty(null);				
+			default:
+				break;
+			}				
+		};
+	};
+	
 	@Override	
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -136,7 +144,7 @@ public class ChooseAreaActivity extends BaseActivity{
 					selected_city_id=city_list.get(position).getId();	
 					Log.d(TAG, "所选城市号码"+selected_city_id);					
 					selected_city_name=city_list.get(position).getName();
-					selected_city_code=city_list.get(position).getCode();				
+					selected_city_code=city_list.get(position).getCode().substring(0, 4);		
 					current_level=COUNTY;
 					Log.d(TAG, selected_city_id+"");
 					querycounty(null);
@@ -216,11 +224,15 @@ public class ChooseAreaActivity extends BaseActivity{
 		current_level=COUNTY;	
 		if(county_name==null){
 			county_list=coolweather_db.getALLcounty(selected_city_id);		
-		}
+			
+			if(county_list.isEmpty()){//如果没有查询到，去网络查
+				new Thread(new Update_countyinfoThread()).start();
+			}
+			
+		}	
 		else {
 			county_list=coolweather_db.getcounty(county_name);
 		}	
-
 		if(county_list.isEmpty()==true){//如果为空说明没有查询到数据
 			return false;
 		}
@@ -241,6 +253,23 @@ public class ChooseAreaActivity extends BaseActivity{
 			listview.setSelection(0);	
 			return true;
 		}
+	}
+
+	private boolean queryfromServer() {
+		String address="http://www.weather.com.cn/data/list3/city"+selected_city_code+".xml";
+		HttpUtil.sendHttpRequest(address, new HttpCallbackListener() {			
+			@Override
+			public void onhandle(String response) {
+				HttpHandler.httpHandleMessage(response, "county", coolweather_db, selected_city_id);
+				isbackinfo=true;
+			}		
+			@Override
+			public void onerror(Exception e) {
+				e.printStackTrace();
+				isbackinfo=false;
+			}			
+		});
+		return isbackinfo;		
 	}
 
 	@Override
@@ -276,7 +305,7 @@ public class ChooseAreaActivity extends BaseActivity{
 					Toast.makeText(ChooseAreaActivity.this, "输入不能为空 (>﹏<)", Toast.LENGTH_SHORT).show();
 					return;
 				}
-				//三级查询
+				//三级查询，这里因为后面做了优化，只把城市的数据读进去了，所以县的数据就没有
 				if(querycity(city_name)==false){
 					if(querycounty(city_name)==false){
 						if(queryprovince(city_name)==false){
@@ -314,12 +343,25 @@ public class ChooseAreaActivity extends BaseActivity{
 		}		
 	}
 
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {					
-		super.onCreateOptionsMenu(menu);
-		menu.add(Menu.NONE, Menu.FIRST+1, 0, "设置").setIcon(android.R.drawable.ic_menu_call);
-		menu.add(Menu.NONE, Menu.FIRST+2, 1, "退出").setIcon(android.R.drawable.ic_menu_close_clear_cancel);
-		return true;
+	class Update_countyinfoThread implements Runnable{
+		@Override
+		public void run() {
+			boolean result=queryfromServer();
+			Message message=new Message();
+			if(result==false){
+				message.what=UPDATE_COUNTYINFO_FAIL;
+				handler.sendMessage(message);				
+			}
+			else {
+				message.what=UPDATE_COUNTYINFO_SUCCESS;
+				handler.sendMessage(message);
+			}
+		}	
 	}
-
+	
+	
+	
+	
+	
+	
 }
