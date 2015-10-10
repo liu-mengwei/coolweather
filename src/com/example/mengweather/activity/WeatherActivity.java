@@ -1,6 +1,7 @@
 package com.example.mengweather.activity;
 
 import java.util.ArrayList;
+
 import com.example.mengweather.R;
 import com.example.mengweather.database.Mydatabase;
 import com.example.mengweather.model.City;
@@ -11,7 +12,11 @@ import com.example.mengweather.util.HttpUtil;
 import com.example.mengweather.util.JsonHandler;
 import com.example.mengweather.util.MyLocation;
 import com.example.mengweather.util.Pingyin;
+
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -20,6 +25,8 @@ import android.os.Message;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
@@ -427,5 +434,33 @@ public class WeatherActivity extends BaseActivity{
 		}		
 	}
 
-
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		getMenuInflater().inflate(R.menu.main, menu);
+		return true;	
+	}
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case R.id.question_item:
+			AlertDialog.Builder builder=new AlertDialog.Builder(WeatherActivity.this);
+			builder.setTitle("查看源码及BUG反馈");
+			builder.setCancelable(false);
+			builder.setMessage("查看源码请访问github.com/liu-mengwei  "
+					+ "BUG反馈请联系作者微信lmw-1223,或发送邮件到542221757@qq.com");
+			builder.setPositiveButton("确定", new DialogInterface.OnClickListener() {			
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					dialog.dismiss();
+				}
+			});
+			builder.show();
+			break;
+		default:
+			break;
+		}
+		return true;	
+	}
+	
 }

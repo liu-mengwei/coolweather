@@ -3,9 +3,7 @@
     tools:context="com.example.coolweather.MainActivity" >
 
     <item
-        android:id="@+id/action_settings"
-        android:orderInCategory="100"
-        android:showAsAction="never"
-        android:title="@string/action_settings"/>
+        android:id="@+id/question_item"
+        android:title="查看源码及BUG反馈"/>
 
 </menu>
