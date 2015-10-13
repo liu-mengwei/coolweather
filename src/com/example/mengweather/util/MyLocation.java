@@ -8,7 +8,7 @@ import android.util.Log;
 
 
 /**
- * 用来实现地图定位功能的类
+ * 用来实现地图定位功能的类,由于很多机型不支持，所以不得不舍弃这种方法
  */
 public class MyLocation {
 	
@@ -25,7 +25,7 @@ public class MyLocation {
 	 */
 	public static String getLocationName(final Context context){
 		Location location=getlocation(context);
-		Log.d(TAG, "经度"+location.getLatitude());
+//		Log.d(TAG, "经度"+location.getLatitude());
 		//拼接反向地理编码的地址
 		String address="http://api.map.baidu.com/geocoder/v2/?ak=rfRk6cyi48zoePeEPOX0uT9m"
 				+"&mcode=B8:F7:0F:28:97:D0:2A:F8:33:51:AE:46:ED:56:62:FD:C4:B3:4A:36;com.example.mengweather"
@@ -57,12 +57,10 @@ public class MyLocation {
 		if(providerList.contains(LocationManager.GPS_PROVIDER)){
 			provider=LocationManager.GPS_PROVIDER;
 		}
-		else if (providerList.contains(LocationManager.NETWORK_PROVIDER)) {
-			provider=LocationManager.NETWORK_PROVIDER;
-		}
 		else {
 			Log.d("MyLocation", "定位失败");
-		}		
+		}
+		Log.d("MyLocation", providerList.get(1));
 		Location location=locationManager.getLastKnownLocation(provider);//卧槽封装的真好，就这么一行代码就返回地理位置了？
 		return location;		
 	}

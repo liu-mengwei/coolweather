@@ -2,6 +2,10 @@ package com.example.mengweather.activity;
 
 import java.util.ArrayList;
 
+import com.baidu.location.BDLocation;
+import com.baidu.location.BDLocationListener;
+import com.baidu.location.LocationClient;
+import com.baidu.location.LocationClientOption;
 import com.example.mengweather.R;
 import com.example.mengweather.database.Mydatabase;
 import com.example.mengweather.model.City;
@@ -21,6 +25,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.text.TextUtils;
 import android.util.Log;
@@ -44,6 +49,8 @@ public class WeatherActivity extends BaseActivity{
 	public static final int UPDATE_CITYINFO_SUCCESS=2;
 	public static final int UPDATE_CITYINFO_FAIL=3;
 	public static final int UPDATE_PROGRESS=4;
+	private  LocationClient locationClient;
+	private LocationClientOption option;
 
 	private Button home;
 	private Button reset;
@@ -56,6 +63,7 @@ public class WeatherActivity extends BaseActivity{
 
 	private SharedPreferences weatherinfo_pre;
 	private SharedPreferences isfirstused_pre;
+	private SharedPreferences location_pre;
 	private boolean isbackinfo=false;
 	private boolean isFirstUsed=true;
 	private ProgressDialog progressDialog;
@@ -122,7 +130,7 @@ public class WeatherActivity extends BaseActivity{
 		temp2=(TextView) findViewById(R.id.temp2);
 		weahter_describe=(TextView) findViewById(R.id.weather_describe);
 		date=(TextView) findViewById(R.id.date);
-		//这里分了个线程出去，没有执行完这句，后面就已经执行了，所以province_list为空,我草这个bug查了两个多小时	
+		
 		//检查是否是第一次使用软件，如果是则保存所有数据到数据库
 		isfirstused_pre=getSharedPreferences("isFirstUsed", MODE_PRIVATE);
 		isFirstUsed=isfirstused_pre.getBoolean("isFirstUsed", true);	
@@ -131,37 +139,50 @@ public class WeatherActivity extends BaseActivity{
 		if(isFirstUsed){//数据库中可能有数据，因为可能存了一办网断了，但已经存入了数据,为了防止重复，删除之前存入的数据
 			coolweather_db.clearDatabase();
 			showprogress("update_cityinfo");	
-			new Thread(new Update_weatherinfoThread()).start();//开启存入数据的线程
+			new Thread(new Update_weatherinfoThread()).start();//开启存入数据的线程	
+			//开启定位
+			startLocate();
+			locationClient.registerLocationListener(new BDLocationListener() {			
+				@Override
+				public void onReceiveLocation(BDLocation location) {
+					String city=location.getCity();
+					Log.d(TAG, city);
+					county_name=city.substring(0, city.length()-1);			
+				}
+			});
 		}	
 
 		else {//如果不是第一次使用则正常获得countycode
 			isFirstUsed=false;
 			from=getIntent();
-			county_code=from.getStringExtra("county_code");
+			county_code=from.getStringExtra("county_code");//这是从列表里切换过来的
 			county_name=from.getStringExtra("county_name");
 			tag=from.getStringExtra("tag");
-			if(county_code==null){//自己的城市
-				SharedPreferences location_pre=getSharedPreferences("location_pre", MODE_PRIVATE);
-				String locationName=location_pre.getString("locationName", "");
-				county_name=locationName;
-				//这时候肯定有countycode,
-                //不一定卧槽如果还没加载完用户点到城市列表咋办？	
-				county_code=location_pre.getString("locationCode", "");	
-				try {
-					Thread thread=new Thread(new Up_LocationThread());//这里countyname已经改变，如果发生异常就没变
-					thread.start();
-					thread.join();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-				if(!county_name.equals(locationName)){//获得最新城市
-					SharedPreferences.Editor editor=location_pre.edit();					
-					editor.putString("locationName", county_name);
-					editor.putString("locationCode", county_code);
-					editor.commit();
-				}
-				tag="need";
-			}
+			if(county_code==null){//自己的城市(打开软件时)
+				location_pre=getSharedPreferences("location_pre", MODE_PRIVATE);
+				county_name=location_pre.getString("locationName", "");		
+				county_code=location_pre.getString("locationCode", "");//这时候肯定有countycode,
+				tag="need";			
+				//开启定位
+				startLocate();
+				locationClient.registerLocationListener(new BDLocationListener() {			
+					@Override
+					public void onReceiveLocation(BDLocation location) {
+						String city=location.getCity();
+						Log.d(TAG, city);
+						String cityName=city.substring(0, city.length()-1);		
+						String cityCode=coolweather_db.getcity(cityName).get(0).getCode();
+						if(!county_name.equals(cityName)){//获得最新城市
+							SharedPreferences.Editor editor=location_pre.edit();					
+							editor.putString("locationName", cityName);
+							editor.putString("locationCode", cityCode);
+							editor.commit();
+							county_code=cityCode;
+							new Thread(new Update_weatherinfoThread()).start();//如果城市不一样则再更新一遍天气，并将城市存入pre中
+						}				
+					}
+				});			
+			}					
 			updateUI();
 			if(tag.equals("need")){
 				showprogress("update_weather");
@@ -170,7 +191,8 @@ public class WeatherActivity extends BaseActivity{
 
 		if(tag.equals("need")&&isFirstUsed==false){			
 			new Thread(new Update_weatherinfoThread()).start();;//更新天气线程							
-		}		
+		}	
+		
 		//--------按钮绑定事件
 		reset.setOnTouchListener(new OnTouchListener() {
 			@Override
@@ -296,8 +318,6 @@ public class WeatherActivity extends BaseActivity{
 		Log.d(TAG, "活动二销毁");
 	}
 	
-	
-
 	//将从网上获得的所有数据存储到数据库,如果中间一环出了问题就返回false,先只加载省市数据
 	public boolean saveAllinfo(){
 		if(queryfromServer("province", null,-1)==false){
@@ -383,17 +403,13 @@ public class WeatherActivity extends BaseActivity{
 			Message message=new Message();	
 			if(result==true){				
 				message.what=UPDATE_CITYINFO_SUCCESS;		
-				//定位功能写到这里，返回一个县名就行				
-				county_name=MyLocation.getLocationName(WeatherActivity.this);			
-				if(TextUtils.isEmpty(county_name)==false){			
-					county_code=coolweather_db.getcity(county_name).get(0).getCode();//这里直接复用代码，取第一个城市就行	
-					//在内部类中可以直接调用getSharedPreferences方法
-					SharedPreferences location_pre=getSharedPreferences("location_pre", MODE_PRIVATE);
-					SharedPreferences.Editor editor=location_pre.edit();
-					editor.putString("locationName", county_name);//将定位好的城市名存到pre中
-					editor.putString("locationCode", county_code);
-					editor.commit();
-				}				
+				county_code=coolweather_db.getcity(county_name).get(0).getCode();//这里直接复用代码，取第一个城市就行	
+				//在内部类中可以直接调用getSharedPreferences方法
+				SharedPreferences location_pre=getSharedPreferences("location_pre", MODE_PRIVATE);
+				SharedPreferences.Editor editor=location_pre.edit();
+				editor.putString("locationName", county_name);//将定位好的城市名存到pre中
+				editor.putString("locationCode", county_code);
+				editor.commit();					
 			}
 			else {
 				message.what=UPDATE_CITYINFO_FAIL;
@@ -401,7 +417,16 @@ public class WeatherActivity extends BaseActivity{
 			handler.sendMessage(message);
 		}
 	}
-
+	
+	public void startLocate(){
+		locationClient=new LocationClient(this);
+		LocationClientOption option=new LocationClientOption();
+		option.setIsNeedAddress(true);
+		locationClient.setLocOption(option);
+		locationClient.start();	
+		Log.d(TAG, "+++++++++");
+	}
+	
 	/**
 	 *用来更新天气信息的线程类
 	 */
@@ -422,18 +447,7 @@ public class WeatherActivity extends BaseActivity{
 			showWeather(weather_code);			
 		}		
 	}
-
-	class Up_LocationThread implements Runnable{
-		@Override
-		public void run() {
-			String newLocationName=MyLocation.getLocationName(WeatherActivity.this);
-			if(!TextUtils.isEmpty(newLocationName)){
-				county_name=newLocationName;
-				county_code=coolweather_db.getcity(county_name).get(0).getCode();
-			}
-		}		
-	}
-
+	
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		getMenuInflater().inflate(R.menu.main, menu);
@@ -461,6 +475,14 @@ public class WeatherActivity extends BaseActivity{
 			break;
 		}
 		return true;	
+	}
+	
+	@Override
+	protected void onStop() {
+		super.onStop();
+		if(locationClient!=null){
+			locationClient.stop();
+		}
 	}
 	
 }

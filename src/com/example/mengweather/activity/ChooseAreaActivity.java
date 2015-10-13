@@ -393,10 +393,5 @@ public class ChooseAreaActivity extends BaseActivity{
 		}
 		return true;
 	}
-	
-	
-	
-	
-	
-	
+		
 }
