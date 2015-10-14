@@ -34,6 +34,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.Window;
 import android.view.View.OnTouchListener;
 import android.widget.Button;
@@ -54,13 +55,18 @@ public class WeatherActivity extends BaseActivity{
 
 	private Button home;
 	private Button reset;
+	private Button suggestion;
 	private TextView weather_title;
 	private ImageView weather_image;
-	private TextView temp1;
-	private TextView temp2;
+	private TextView tmp;
 	private TextView weahter_describe;
-	private TextView date;
-
+	private TextView quality;
+	private TextView tormmorw_de;
+	private TextView after_de;
+	private TextView update_time;
+	private TextView tommorow_tmp;
+	private TextView after_tmp;
+	
 	private SharedPreferences weatherinfo_pre;
 	private SharedPreferences isfirstused_pre;
 	private SharedPreferences location_pre;
@@ -124,12 +130,17 @@ public class WeatherActivity extends BaseActivity{
 		//获取实例
 		home=(Button) findViewById(R.id.home);
 		reset=(Button) findViewById(R.id.reset);
+		suggestion=(Button) findViewById(R.id.suggestion);
 		weather_title=(TextView) findViewById(R.id.weather_title);	
 		weather_image=(ImageView) findViewById(R.id.weather_image);
-		temp1=(TextView) findViewById(R.id.temp1);
-		temp2=(TextView) findViewById(R.id.temp2);
+		tmp=(TextView) findViewById(R.id.tmp);
 		weahter_describe=(TextView) findViewById(R.id.weather_describe);
-		date=(TextView) findViewById(R.id.date);
+		quality=(TextView) findViewById(R.id.quality);
+		tormmorw_de=(TextView) findViewById(R.id.tormmorw_de);
+		after_de=(TextView) findViewById(R.id.after_de);
+		update_time=(TextView) findViewById(R.id.update_time);	
+		tommorow_tmp=(TextView) findViewById(R.id.tommorow_tmp);
+		after_tmp=(TextView) findViewById(R.id.after_tmp);
 		
 		//检查是否是第一次使用软件，如果是则保存所有数据到数据库
 		isfirstused_pre=getSharedPreferences("isFirstUsed", MODE_PRIVATE);
@@ -137,6 +148,10 @@ public class WeatherActivity extends BaseActivity{
 		String tag="need";
 
 		if(isFirstUsed){//数据库中可能有数据，因为可能存了一办网断了，但已经存入了数据,为了防止重复，删除之前存入的数据
+			findViewById(R.id.tommorow).setVisibility(View.INVISIBLE);
+			findViewById(R.id.after).setVisibility(View.INVISIBLE);
+			findViewById(R.id.nowweather).setVisibility(View.INVISIBLE);
+			suggestion.setVisibility(View.INVISIBLE);
 			coolweather_db.clearDatabase();
 			showprogress("update_cityinfo");	
 			new Thread(new Update_weatherinfoThread()).start();//开启存入数据的线程	
@@ -163,7 +178,7 @@ public class WeatherActivity extends BaseActivity{
 				county_name=location_pre.getString("locationName", "");		
 				county_code=location_pre.getString("locationCode", "");//这时候肯定有countycode,
 				tag="need";			
-				//开启定位
+				//开启定位(假如到了最新城市，软件一打开就显示当地天气)
 				startLocate();
 				locationClient.registerLocationListener(new BDLocationListener() {			
 					@Override
@@ -190,7 +205,7 @@ public class WeatherActivity extends BaseActivity{
 		}	
 
 		if(tag.equals("need")&&isFirstUsed==false){			
-			new Thread(new Update_weatherinfoThread()).start();;//更新天气线程							
+			new Thread(new Update_weatherinfoThread()).start();//更新天气线程							
 		}	
 		
 		//--------按钮绑定事件
@@ -234,21 +249,56 @@ public class WeatherActivity extends BaseActivity{
 				return false;
 			}
 		});
+		
+		suggestion.setOnTouchListener(new OnTouchListener() {
+			@Override
+			public boolean onTouch(View v, MotionEvent event) {
+				if(event.getAction()==MotionEvent.ACTION_DOWN){
+					v.setBackgroundResource(R.drawable.zzzuggestion2);
+				}
+				else if (event.getAction()==MotionEvent.ACTION_UP) {
+					v.setBackgroundResource(R.drawable.zzzuggestion1);
+					Intent intent=new Intent(WeatherActivity.this, SuggestionActivity.class);
+					intent.putExtra("county_code", county_code);
+					startActivity(intent);
+					finish();
+				}
+				return false;
+			}
+		});
+			
 	}
 
-	private void updateUI() {
+	private void updateUI() {	
+		findViewById(R.id.tommorow).setVisibility(View.VISIBLE);
+		findViewById(R.id.after).setVisibility(View.VISIBLE);
+		findViewById(R.id.nowweather).setVisibility(View.VISIBLE);
+		suggestion.setVisibility(View.VISIBLE);
+		
 		weatherinfo_pre=getSharedPreferences("weather_info", MODE_PRIVATE);
-		String temp1=weatherinfo_pre.getString("temp1", "");
-		String temp2=weatherinfo_pre.getString("temp2", "");
+		String tmp=weatherinfo_pre.getString("tmp", "");
 		String weather_describe=weatherinfo_pre.getString("weather_describe", "");
-		String date=weatherinfo_pre.getString("date", "");
 		String county_name=weatherinfo_pre.getString("county_name", "");
+		String quality=weatherinfo_pre.getString("quality", "");
+		String tommorow_de=weatherinfo_pre.getString("tommorow_de", "");
+		String after_de=weatherinfo_pre.getString("after_de", "");
+		String update_time=weatherinfo_pre.getString("update_time", "");
+		String tmp1=weatherinfo_pre.getString("tmp1", "");
+		String tmp2=weatherinfo_pre.getString("tmp2", "");
+		String after_tmp1=weatherinfo_pre.getString("after_tmp1", "");
+		String after_tmp2=weatherinfo_pre.getString("after_tmp2", "");
+		
 		//用this表示是view
 		this.weather_title.setText(county_name);
-		this.temp1.setText(temp2+"	~");//因为服务器返回的temp1是高温，所以换一下
-		this.temp2.setText(temp1);
+		this.tmp.setText(tmp+"℃");
 		this.weahter_describe.setText(weather_describe);
-		this.date.setText(date);
+		this.quality.setText("空气质量："+quality);
+		this.tormmorw_de.setText(tommorow_de);
+		this.after_de.setText(after_de);
+		this.update_time.setText(update_time.split(" ")[1]+"发布");
+		this.tommorow_tmp.setText(tmp1+"~"+tmp2+"℃");
+		this.after_tmp.setText(after_tmp1+"~"+after_tmp2+"℃");
+		
 		//更新图片
 		String image_name=Pingyin.getPingYin(weather_describe).split("zhuan")[0];//转化成拼音并取转前面的天气
 		int imageID=Pingyin.getimageID(image_name);	
@@ -348,7 +398,8 @@ public class WeatherActivity extends BaseActivity{
 			address="http://www.weather.com.cn/data/list3/city"+code+".xml";	
 			break;
 		case "weather":	//获取天气信息
-			address="http://www.weather.com.cn/data/cityinfo/"+code+".html";
+			address="https://api.heweather.com/x3/weather?cityid="+"CN"+weather_code+"&key"
+					+ "=e2c80cc8f31a4189b0621adfd4813193";
 			break;
 		case "province"://获取省级列表
 			address="http://www.weather.com.cn/data/list3/city.xml";
