@@ -66,7 +66,7 @@ public class WeatherActivity extends BaseActivity{
 	private TextView update_time;
 	private TextView tommorow_tmp;
 	private TextView after_tmp;
-	
+
 	private SharedPreferences weatherinfo_pre;
 	private SharedPreferences isfirstused_pre;
 	private SharedPreferences location_pre;
@@ -141,7 +141,7 @@ public class WeatherActivity extends BaseActivity{
 		update_time=(TextView) findViewById(R.id.update_time);	
 		tommorow_tmp=(TextView) findViewById(R.id.tommorow_tmp);
 		after_tmp=(TextView) findViewById(R.id.after_tmp);
-		
+
 		//检查是否是第一次使用软件，如果是则保存所有数据到数据库
 		isfirstused_pre=getSharedPreferences("isFirstUsed", MODE_PRIVATE);
 		isFirstUsed=isfirstused_pre.getBoolean("isFirstUsed", true);	
@@ -207,7 +207,7 @@ public class WeatherActivity extends BaseActivity{
 		if(tag.equals("need")&&isFirstUsed==false){			
 			new Thread(new Update_weatherinfoThread()).start();//更新天气线程							
 		}	
-		
+
 		//--------按钮绑定事件
 		reset.setOnTouchListener(new OnTouchListener() {
 			@Override
@@ -249,7 +249,7 @@ public class WeatherActivity extends BaseActivity{
 				return false;
 			}
 		});
-		
+
 		suggestion.setOnTouchListener(new OnTouchListener() {
 			@Override
 			public boolean onTouch(View v, MotionEvent event) {
@@ -266,7 +266,7 @@ public class WeatherActivity extends BaseActivity{
 				return false;
 			}
 		});
-			
+
 	}
 
 	private void updateUI() {	
@@ -274,7 +274,7 @@ public class WeatherActivity extends BaseActivity{
 		findViewById(R.id.after).setVisibility(View.VISIBLE);
 		findViewById(R.id.nowweather).setVisibility(View.VISIBLE);
 		suggestion.setVisibility(View.VISIBLE);
-		
+
 		weatherinfo_pre=getSharedPreferences("weather_info", MODE_PRIVATE);
 		String tmp=weatherinfo_pre.getString("tmp", "");
 		String weather_describe=weatherinfo_pre.getString("weather_describe", "");
@@ -287,7 +287,7 @@ public class WeatherActivity extends BaseActivity{
 		String tmp2=weatherinfo_pre.getString("tmp2", "");
 		String after_tmp1=weatherinfo_pre.getString("after_tmp1", "");
 		String after_tmp2=weatherinfo_pre.getString("after_tmp2", "");
-		
+
 		//用this表示是view
 		this.weather_title.setText(county_name);
 		this.tmp.setText(tmp+"℃");
@@ -298,7 +298,7 @@ public class WeatherActivity extends BaseActivity{
 		this.update_time.setText(update_time.split(" ")[1]+"发布");
 		this.tommorow_tmp.setText(tmp1+"~"+tmp2+"℃");
 		this.after_tmp.setText(after_tmp1+"~"+after_tmp2+"℃");
-		
+
 		//更新图片
 		String image_name=Pingyin.getPingYin(weather_describe).split("zhuan")[0];//转化成拼音并取转前面的天气
 		int imageID=Pingyin.getimageID(image_name);	
@@ -333,7 +333,7 @@ public class WeatherActivity extends BaseActivity{
 		else {
 			progressDialog.setMax(34);
 			progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-			progressDialog.setMessage("正在加载城市列表.....(>﹏<)\n若失败请切换至WIFI环境点击右上角刷新按钮");
+			progressDialog.setMessage("正在加载城市列表.....(>﹏<)\n若失败请切换至WIFI环境点击右上角刷新按钮\n查看源码请按菜单键");
 		}
 		progressDialog.show();
 	}
@@ -350,16 +350,16 @@ public class WeatherActivity extends BaseActivity{
 	}
 
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
-	    if(keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_DOWN){   
-	        if((System.currentTimeMillis()-exitTime) > 2000){  
-	            Toast.makeText(getApplicationContext(), "再按一次退出程序", Toast.LENGTH_SHORT).show();                                
-	            exitTime = System.currentTimeMillis();   
-	        } else {
-	        	ActivityController.closeProcess();
-	        }
-	        return true;   
-	    }
-	    return super.onKeyDown(keyCode, event);
+		if(keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_DOWN){   
+			if((System.currentTimeMillis()-exitTime) > 2000){  
+				Toast.makeText(getApplicationContext(), "再按一次退出程序", Toast.LENGTH_SHORT).show();                                
+				exitTime = System.currentTimeMillis();   
+			} else {
+				ActivityController.closeProcess();
+			}
+			return true;   
+		}
+		return super.onKeyDown(keyCode, event);
 	}
 
 	@Override
@@ -367,7 +367,7 @@ public class WeatherActivity extends BaseActivity{
 		super.onDestroy();
 		Log.d(TAG, "活动二销毁");
 	}
-	
+
 	//将从网上获得的所有数据存储到数据库,如果中间一环出了问题就返回false,先只加载省市数据
 	public boolean saveAllinfo(){
 		if(queryfromServer("province", null,-1)==false){
@@ -460,7 +460,7 @@ public class WeatherActivity extends BaseActivity{
 				SharedPreferences.Editor editor=location_pre.edit();
 				editor.putString("locationName", county_name);//将定位好的城市名存到pre中
 				editor.putString("locationCode", county_code);
-				editor.commit();					
+				editor.commit();
 			}
 			else {
 				message.what=UPDATE_CITYINFO_FAIL;
@@ -468,7 +468,7 @@ public class WeatherActivity extends BaseActivity{
 			handler.sendMessage(message);
 		}
 	}
-	
+
 	public void startLocate(){
 		locationClient=new LocationClient(this);
 		LocationClientOption option=new LocationClientOption();
@@ -477,7 +477,7 @@ public class WeatherActivity extends BaseActivity{
 		locationClient.start();	
 		Log.d(TAG, "+++++++++");
 	}
-	
+
 	/**
 	 *用来更新天气信息的线程类
 	 */
@@ -498,13 +498,13 @@ public class WeatherActivity extends BaseActivity{
 			showWeather(weather_code);			
 		}		
 	}
-	
+
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		getMenuInflater().inflate(R.menu.main, menu);
 		return true;	
 	}
-	
+
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
@@ -512,7 +512,7 @@ public class WeatherActivity extends BaseActivity{
 			AlertDialog.Builder builder=new AlertDialog.Builder(WeatherActivity.this);
 			builder.setTitle("查看源码及BUG反馈");
 			builder.setCancelable(false);
-			builder.setMessage("查看源码请访问github.com/liu-mengwei  "
+			builder.setMessage("查看源码请访问github.com/liu-mengwei (version4.0分支)， "
 					+ "BUG反馈请联系作者微信lmw-1223,或发送邮件到542221757@qq.com");
 			builder.setPositiveButton("确定", new DialogInterface.OnClickListener() {			
 				@Override
@@ -527,7 +527,7 @@ public class WeatherActivity extends BaseActivity{
 		}
 		return true;	
 	}
-	
+
 	@Override
 	protected void onStop() {
 		super.onStop();
@@ -535,5 +535,5 @@ public class WeatherActivity extends BaseActivity{
 			locationClient.stop();
 		}
 	}
-	
+
 }

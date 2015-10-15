@@ -22,7 +22,7 @@
             android:id="@+id/index"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentRight="true"
+            android:layout_toRightOf="@id/suggestion_title"
             android:text="较适宜"
             android:textColor="#ffffff"
             android:textSize="20sp" />

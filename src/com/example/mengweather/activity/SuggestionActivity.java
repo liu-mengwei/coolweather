@@ -57,13 +57,13 @@ public class SuggestionActivity extends BaseActivity{
 	private void initializeSuggestion() {
 		SharedPreferences pre=getSharedPreferences("weather_info", Context.MODE_PRIVATE);
 		suggestions=new ArrayList<Suggestion>();
-		suggestions.add(new Suggestion("舒适指数", pre.getString("index1", ""), pre.getString("detail1", "")));
-		suggestions.add(new Suggestion("洗车指数", pre.getString("index2", ""), pre.getString("detail2", "")));
-		suggestions.add(new Suggestion("穿衣指数", pre.getString("index3", ""), pre.getString("detail3", "")));
-		suggestions.add(new Suggestion("感冒指数", pre.getString("index4", ""), pre.getString("detail4", "")));
-		suggestions.add(new Suggestion("运动指数", pre.getString("index5", ""), pre.getString("detail5", "")));
-		suggestions.add(new Suggestion("旅游指数", pre.getString("index6", ""), pre.getString("detail6", "")));
-		suggestions.add(new Suggestion("紫外线指数", pre.getString("index7", ""), pre.getString("detail7", "")));
+		suggestions.add(new Suggestion("舒适指数：", pre.getString("index1", ""), pre.getString("detail1", "")));
+		suggestions.add(new Suggestion("洗车指数：", pre.getString("index2", ""), pre.getString("detail2", "")));
+		suggestions.add(new Suggestion("穿衣指数：", pre.getString("index3", ""), pre.getString("detail3", "")));
+		suggestions.add(new Suggestion("感冒指数：", pre.getString("index4", ""), pre.getString("detail4", "")));
+		suggestions.add(new Suggestion("运动指数：", pre.getString("index5", ""), pre.getString("detail5", "")));
+		suggestions.add(new Suggestion("旅游指数：", pre.getString("index6", ""), pre.getString("detail6", "")));
+		suggestions.add(new Suggestion("紫外线指数：", pre.getString("index7", ""), pre.getString("detail7", "")));
 	}
 
 	@Override
