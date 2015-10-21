@@ -1,10 +1,8 @@
 package com.example.mengweather.util;
 
 import java.util.List;
-
 import com.example.mengweather.R;
 import com.example.mengweather.model.Suggestion;
-
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;

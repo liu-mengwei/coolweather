@@ -10,6 +10,7 @@ import com.example.mengweather.R;
 import com.example.mengweather.database.Mydatabase;
 import com.example.mengweather.model.City;
 import com.example.mengweather.model.Province;
+import com.example.mengweather.service.WeatherService;
 import com.example.mengweather.util.HttpCallbackListener;
 import com.example.mengweather.util.HttpHandler;
 import com.example.mengweather.util.HttpUtil;
@@ -17,6 +18,7 @@ import com.example.mengweather.util.JsonHandler;
 import com.example.mengweather.util.MyLocation;
 import com.example.mengweather.util.Pingyin;
 
+import android.R.bool;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
@@ -72,6 +74,7 @@ public class WeatherActivity extends BaseActivity{
 	private SharedPreferences location_pre;
 	private boolean isbackinfo=false;
 	private boolean isFirstUsed=true;
+	private boolean service_tag=false;//需要启动service的标识
 	private ProgressDialog progressDialog;
 	private int progress_value=0;//用来进行更新进度框操作
 
@@ -154,7 +157,7 @@ public class WeatherActivity extends BaseActivity{
 			suggestion.setVisibility(View.INVISIBLE);
 			coolweather_db.clearDatabase();
 			showprogress("update_cityinfo");	
-			new Thread(new Update_weatherinfoThread()).start();//开启存入数据的线程	
+
 			//开启定位
 			startLocate();
 			locationClient.registerLocationListener(new BDLocationListener() {			
@@ -163,6 +166,8 @@ public class WeatherActivity extends BaseActivity{
 					String city=location.getCity();
 					Log.d(TAG, city);
 					county_name=city.substring(0, city.length()-1);			
+					service_tag=true;
+					new Thread(new Update_weatherinfoThread()).start();//开启存入数据的线程	
 				}
 			});
 		}	
@@ -174,6 +179,7 @@ public class WeatherActivity extends BaseActivity{
 			county_name=from.getStringExtra("county_name");
 			tag=from.getStringExtra("tag");
 			if(county_code==null){//自己的城市(打开软件时)
+				service_tag=true;
 				location_pre=getSharedPreferences("location_pre", MODE_PRIVATE);
 				county_name=location_pre.getString("locationName", "");		
 				county_code=location_pre.getString("locationCode", "");//这时候肯定有countycode,
@@ -496,6 +502,13 @@ public class WeatherActivity extends BaseActivity{
 			Log.d(TAG, "countycode值为"+county_code);
 			getweather_code(county_code);//上面那个线程执行完，就有county_code的值了
 			showWeather(weather_code);			
+
+			if(service_tag==true){
+				Log.d(TAG, "service启动");		
+				Intent intent=new Intent(WeatherActivity.this, WeatherService.class);
+				intent.putExtra("weather_code", weather_code);
+				startService(intent);	
+			}
 		}		
 	}
 
@@ -522,6 +535,9 @@ public class WeatherActivity extends BaseActivity{
 			});
 			builder.show();
 			break;
+		case R.id.settings_item:	
+			
+			
 		default:
 			break;
 		}

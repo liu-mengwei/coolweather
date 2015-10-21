@@ -213,7 +213,6 @@ public class Mydatabase{
 		return counties;		
 	}
 	
-	
 	/**
 	 * 知道数据库省份id号返回省份名称
 	 * @param province_id 省份id号

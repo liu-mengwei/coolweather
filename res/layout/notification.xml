@@ -1,0 +1,103 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content" >
+
+    <LinearLayout
+        android:id="@+id/linearLayout1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal" >
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="5dp" >
+
+            <ImageView
+                android:id="@+id/notification_image"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:src="@drawable/zhongyu" />
+
+            <TextView
+                android:id="@+id/notification_cityName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="-20dp"
+                android:gravity="center"
+                android:text="深圳"
+                android:textSize="15sp" />
+        </LinearLayout>
+
+        <ImageView
+            android:layout_width="1px"
+            android:layout_height="match_parent"
+            android:background="#4fd5d0ce" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:padding="5dp" >
+
+            <TextView
+                android:id="@+id/notification_describe"
+                android:layout_width="wrap_content"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:gravity="center_vertical"
+                android:text="晴"
+                android:textSize="15sp" />
+
+            <TextView
+                android:id="@+id/notification_temp"
+                android:layout_width="wrap_content"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:gravity="center_vertical"
+                android:text="10℃"
+                android:textSize="15sp" />
+        </LinearLayout>
+
+        <ImageView
+            android:layout_width="1px"
+            android:layout_height="match_parent"
+            android:background="#4fd5d0ce" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:padding="5dp" >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center_vertical"
+                android:text="空气质量"
+                android:textSize="15sp" />
+
+            <TextView
+                android:id="@+id/notification_quality"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center_vertical"
+                android:text="良好"
+                android:textSize="15sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/notification_uptime"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/linearLayout1"
+        android:layout_alignParentRight="true"
+        android:layout_marginBottom="5dp"
+        android:layout_marginRight="5dp"
+        android:text="15:00发布" />
+
+</RelativeLayout>
