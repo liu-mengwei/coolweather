@@ -1,6 +1,8 @@
 package com.example.mengweather.activity;
 
 import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import com.baidu.location.BDLocation;
 import com.baidu.location.BDLocationListener;
@@ -52,6 +54,7 @@ public class WeatherActivity extends BaseActivity{
 	public static final int UPDATE_CITYINFO_SUCCESS=2;
 	public static final int UPDATE_CITYINFO_FAIL=3;
 	public static final int UPDATE_PROGRESS=4;
+	public static final int LOCATE_FAIL=5;
 	private  LocationClient locationClient;
 	private LocationClientOption option;
 
@@ -75,6 +78,7 @@ public class WeatherActivity extends BaseActivity{
 	private boolean isbackinfo=false;
 	private boolean isFirstUsed=true;
 	private boolean service_tag=false;//需要启动service的标识
+	private boolean locate_tag=false;//定位失败的标识,默认失败
 	private ProgressDialog progressDialog;
 	private int progress_value=0;//用来进行更新进度框操作
 
@@ -112,14 +116,17 @@ public class WeatherActivity extends BaseActivity{
 				closeprogress();
 				break;
 			case UPDATE_CITYINFO_FAIL:
-				Toast.makeText(WeatherActivity.this, "网络连接失败(>﹏<)", Toast.LENGTH_SHORT).show();
+				Toast.makeText(WeatherActivity.this, "网络连接失败(>﹏<)...请按右上角刷新键重试", Toast.LENGTH_SHORT).show();
 				isFirstUsed=true;
 				closeprogress();
 				break;
 			case UPDATE_PROGRESS://只有这个不关进度框也是醉了-----
 				progressDialog.setProgress(progress_value);
-				break;				
-			}
+				break;		
+			case LOCATE_FAIL:		
+				Toast.makeText(WeatherActivity.this, "定位失败(>﹏<)...请退出程序重试", Toast.LENGTH_SHORT).show();
+				closeprogress();
+			}			
 		};	
 	};
 
@@ -157,9 +164,10 @@ public class WeatherActivity extends BaseActivity{
 			suggestion.setVisibility(View.INVISIBLE);
 			coolweather_db.clearDatabase();
 			showprogress("update_cityinfo");	
-
+			
 			//开启定位
-			startLocate();
+			startLocate();			
+			startTiming();
 			locationClient.registerLocationListener(new BDLocationListener() {			
 				@Override
 				public void onReceiveLocation(BDLocation location) {
@@ -167,7 +175,8 @@ public class WeatherActivity extends BaseActivity{
 					Log.d(TAG, city);
 					county_name=city.substring(0, city.length()-1);			
 					service_tag=true;
-					new Thread(new Update_weatherinfoThread()).start();//开启存入数据的线程	
+					locate_tag=true;
+					new Thread(new Update_weatherinfoThread()).start();//开启存入数据的线程						
 				}
 			});
 		}	
@@ -177,13 +186,14 @@ public class WeatherActivity extends BaseActivity{
 			from=getIntent();
 			county_code=from.getStringExtra("county_code");//这是从列表里切换过来的
 			county_name=from.getStringExtra("county_name");
+			weather_code=from.getStringExtra("weather_code");
 			tag=from.getStringExtra("tag");
 			if(county_code==null){//自己的城市(打开软件时)
 				service_tag=true;
 				location_pre=getSharedPreferences("location_pre", MODE_PRIVATE);
 				county_name=location_pre.getString("locationName", "");		
 				county_code=location_pre.getString("locationCode", "");//这时候肯定有countycode,
-				tag="need";			
+				tag="need";		
 				//开启定位(假如到了最新城市，软件一打开就显示当地天气)
 				startLocate();
 				locationClient.registerLocationListener(new BDLocationListener() {			
@@ -213,7 +223,7 @@ public class WeatherActivity extends BaseActivity{
 		if(tag.equals("need")&&isFirstUsed==false){			
 			new Thread(new Update_weatherinfoThread()).start();//更新天气线程							
 		}	
-
+	
 		//--------按钮绑定事件
 		reset.setOnTouchListener(new OnTouchListener() {
 			@Override
@@ -249,6 +259,7 @@ public class WeatherActivity extends BaseActivity{
 					Intent intent=new Intent(WeatherActivity.this, ChooseAreaActivity.class);
 					intent.putExtra("county_name", county_name);
 					intent.putExtra("county_code", county_code);
+					intent.putExtra("weather_code", weather_code);
 					startActivity(intent);
 					finish();
 				}
@@ -266,13 +277,31 @@ public class WeatherActivity extends BaseActivity{
 					v.setBackgroundResource(R.drawable.zzzuggestion1);
 					Intent intent=new Intent(WeatherActivity.this, SuggestionActivity.class);
 					intent.putExtra("county_code", county_code);
+					intent.putExtra("weather_code", weather_code);
 					startActivity(intent);
 					finish();
 				}
 				return false;
 			}
 		});
-
+	}
+	
+	//因为百度的定位有时不知为撒会失败，只能用以下方法先把进度框关掉
+	private void startTiming() {
+		TimerTask task=new TimerTask() {		
+			@Override
+			public void run() {
+				if(locate_tag==false){//定位失败
+					Looper.prepare();
+					Message message=new Message();
+					message.what=LOCATE_FAIL;
+					handler.sendMessage(message);	
+				}
+			}
+		};
+		Timer timer=new Timer();
+		long delay=5000;
+		timer.schedule(task, delay);		
 	}
 
 	private void updateUI() {	
@@ -458,7 +487,7 @@ public class WeatherActivity extends BaseActivity{
 			boolean result=saveAllinfo();
 			//这里用Message返回给主线程，告诉主线程处理结果
 			Message message=new Message();	
-			if(result==true){				
+			if(result==true&&county_name!=null){				
 				message.what=UPDATE_CITYINFO_SUCCESS;		
 				county_code=coolweather_db.getcity(county_name).get(0).getCode();//这里直接复用代码，取第一个城市就行	
 				//在内部类中可以直接调用getSharedPreferences方法
@@ -502,8 +531,9 @@ public class WeatherActivity extends BaseActivity{
 			Log.d(TAG, "countycode值为"+county_code);
 			getweather_code(county_code);//上面那个线程执行完，就有county_code的值了
 			showWeather(weather_code);			
-
-			if(service_tag==true){
+			//下面这个是本来用户设置的选项
+			boolean button_state=getSharedPreferences("button_state", MODE_PRIVATE).getBoolean("button_state", true);
+			if(service_tag==true&&button_state==true){
 				Log.d(TAG, "service启动");		
 				Intent intent=new Intent(WeatherActivity.this, WeatherService.class);
 				intent.putExtra("weather_code", weather_code);
@@ -536,8 +566,13 @@ public class WeatherActivity extends BaseActivity{
 			builder.show();
 			break;
 		case R.id.settings_item:	
-			
-			
+			Intent intent=new Intent(WeatherActivity.this, SettingsActivity.class);
+			intent.putExtra("county_code", county_code);
+			intent.putExtra("weather_code", weather_code);
+			Log.d(TAG, "++"+weather_code);
+			startActivity(intent);
+			finish();
+			break;
 		default:
 			break;
 		}

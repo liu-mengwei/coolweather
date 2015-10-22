@@ -337,6 +337,7 @@ public class ChooseAreaActivity extends BaseActivity{
 		if(current_level==PROVINCE){
 			Intent to=new Intent(ChooseAreaActivity.this, WeatherActivity.class);
 			to.putExtra("county_code",getIntent().getStringExtra("county_code"));
+			to.putExtra("weather_code", getIntent().getStringExtra("weather_code"));
 			to.putExtra("tag", "Noneed");//表示让WeatherActivity不用再更新天气的标识
 			startActivity(to);
 			finish();
@@ -365,33 +366,5 @@ public class ChooseAreaActivity extends BaseActivity{
 		}	
 	}
 	
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		getMenuInflater().inflate(R.menu.main, menu);
-		return true;	
-	}
-	
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		switch (item.getItemId()) {
-		case R.id.question_item:
-			AlertDialog.Builder builder=new AlertDialog.Builder(ChooseAreaActivity.this);
-			builder.setTitle("查看源码及BUG反馈");
-			builder.setCancelable(false);
-			builder.setMessage("查看源码请访问github.com/liu-mengwei  "
-					+ "BUG反馈请联系作者微信lmw-1223,或发送邮件到542221757@qq.com");
-			builder.setPositiveButton("确定", new DialogInterface.OnClickListener() {			
-				@Override
-				public void onClick(DialogInterface dialog, int which) {
-					dialog.dismiss();
-				}
-			});
-			builder.show();
-			break;
-		default:
-			break;
-		}
-		return true;
-	}
 		
 }

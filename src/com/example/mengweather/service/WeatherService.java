@@ -2,12 +2,11 @@ package com.example.mengweather.service;
 
 import com.example.mengweather.R;
 import com.example.mengweather.activity.WeatherActivity;
-import com.example.mengweather.receiver.WeahterReceiver;
+import com.example.mengweather.receiver.WeatherReceiver;
 import com.example.mengweather.util.HttpCallbackListener;
 import com.example.mengweather.util.HttpUtil;
 import com.example.mengweather.util.JsonHandler;
 import com.example.mengweather.util.Pingyin;
-
 import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -51,6 +50,7 @@ public class WeatherService extends Service{
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		weather_code=intent.getStringExtra("weather_code");
+		Log.d(TAG, weather_code);
 		Thread t1=new Thread(new Update_weatherinfoThread());
 		t1.start();
 		try {
@@ -60,7 +60,6 @@ public class WeatherService extends Service{
 		}
 		if(result==true){
 			updateUI();
-			Log.d(TAG, "---------");
 		}
 		else {
 			RemoteViews view=new RemoteViews(getPackageName(), R.layout.notification);
@@ -88,6 +87,7 @@ public class WeatherService extends Service{
 			@Override
 			public void onhandle(String response) {
 				JsonHandler.JsonHandleMessage(response,WeatherService.this);
+				Log.d(TAG, response);
 				result=true;
 			}
 
@@ -108,7 +108,7 @@ public class WeatherService extends Service{
 		String update_time="今天"+weatherinfo_pre.getString("update_time", "").split(" ")[1]+"发布";
 		String image_name=Pingyin.getPingYin(weather_describe).split("zhuan")[0];//转化成拼音并取转前面的天气
 		int imageID=Pingyin.getimageID(image_name);	
-			
+		
 		RemoteViews view=new RemoteViews(getPackageName(), R.layout.notification);
 		view.setTextViewText(R.id.notification_cityName, county_name);			
 		view.setTextViewText(R.id.notification_describe, weather_describe);
@@ -123,9 +123,11 @@ public class WeatherService extends Service{
 	public void startTiming(){
 		AlarmManager alarmManager=(AlarmManager) getSystemService(Context.ALARM_SERVICE);
 		long time=SystemClock.elapsedRealtime()+3*3600*1000;//定时三个小时
-		Intent intent=new Intent(this, WeahterReceiver.class);
+		Intent intent=new Intent(this, WeatherReceiver.class);
+		intent.putExtra("weather_code", weather_code);
 		PendingIntent pendingIntent=PendingIntent.getBroadcast(this, 0, intent, 0);
 		alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, time, pendingIntent);	
+		Log.d(TAG, "发送广播");
 	}
 	
 

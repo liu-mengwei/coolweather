@@ -54,6 +54,8 @@
         </activity>
         <activity android:name="com.example.mengweather.activity.SuggestionActivity" >
         </activity>
+        <activity android:name="com.example.mengweather.activity.SettingsActivity" >
+        </activity>
 
         <service android:name="com.example.mengweather.service.WeatherService" >
         </service>

@@ -75,6 +75,7 @@ public class SuggestionActivity extends BaseActivity{
 		Intent to=new Intent(SuggestionActivity.this, WeatherActivity.class);
 		to.putExtra("tag", "Noneed");//表示让WeatherActivity不用再更新天气的标识
 		to.putExtra("county_code", getIntent().getStringExtra("county_code"));
+		to.putExtra("weather_code", getIntent().getStringExtra("weather_code"));
 		startActivity(to);
 		finish();
 	}
